@@ -14,8 +14,8 @@
 ### Copy Number Calling
 ![Copy Number Calling](./diagrams/cnvkit.png)
 
-### Consensus Calling
-* WIP
+### Copy Number Calling
+![Copy Number Calling](./diagrams/consensus-calling.png)
 
 ## How To Run (Data Processing)
 
@@ -25,12 +25,12 @@ Use the `make_metadata_sheet.py` script to generate a `.tsv` metadata file requi
 
 ```bash
 python make_metadata_sheet.py \
--f "/media/graeberlab/wdtwo/dmach/test_fastqs/nf-batch-18/raw_fastqs" \
+-f "/path/to/batch-18/raw_fastqs" \
 -b 18 \
 -p "Illumina_NovaSeq6000" \
 -s "TCGB" \
--m "/media/graeberlab/wdtwo/dmach/wes_pipeline/revamp_files/nextflow_automation/data_processing/metadata/SequencingPrep.xlsx" \
--o "/media/graeberlab/wdtwo/dmach/wes_pipeline/revamp_files/nextflow_automation/data_processing"
+-m "/path/to/sequencing-metadata.xlsx" \
+-o "/path/to/batch-18/metadata/"
 ```
 
 **Script Parameters:**
@@ -46,9 +46,9 @@ python make_metadata_sheet.py \
 ### 2. Run Data Processing Workflow:
 ```bash
 nextflow run data_processing.nf --with-docker -with-trace \
---base_dir /media/graeberlab/wdtwo/dmach/test_fastqs/nf-batch-18 \
---ref_dir /media/graeberlab/wdtwo/dmach/references \
---metadata /media/graeberlab/wdtwo/dmach/wes_pipeline/revamp_files/nextflow_automation/batch18_metadata_sheet.tsv \
+--base_dir /path/to/batch-18/ \
+--ref_dir /references \
+--metadata /path/to/batch-18/metadata/batch18_metadata_sheet.tsv \
 --cpus 35
 ```
 
@@ -72,16 +72,16 @@ Use the `make_mc_metasheet.py` script to generate a `.tsv` metadata file require
 
 ```bash
 python make_mc_metasheet.py \
---bam_dir /media/graeberlab/wdtwo/dmach/truncated-bams \
--b 123 \
--o ./ \
--m /media/graeberlab/wdtwo/dmach/wes_pipeline/revamp_files/nextflow_automation/mutation_calling/metadata/Sequencing_Metadata_MAIN.xlsx
+--base_dir /path/to/batch-18/ \
+-b 18 \
+-o ./path/to/batch-18/metadata \
+-m /path/to/sequencing-metadata.xlsx
 ```
 
 **Script Parameters:**
 | Flag      | Description |
 |-----------|-------------|
-| --bam_dir | Directory containing .bam files |
+| --base_dir | Base directory of where the BAM files are found (eg: `/path/to/wes-batch-18`) |
 | -b        | Batch number |
 | -m        | Path to metadata prep sheet (Excel .xls) |
 | -o        | Output directory for the generated .tsv |
@@ -90,13 +90,13 @@ python make_mc_metasheet.py \
 
 ```bash
 # Set OncoKB API token from file
-export ONCOKB_TOKEN=$(cat /path/to/references/oncokb-token.txt)
+export ONCOKB_TOKEN=$(cat /references/oncokb-token.txt)
 
 # Run the pipeline
 nextflow run mutation_calling.nf --with-docker -with-trace \
---base_dir "/media/graeberlab/wdtwo/dmach/truncated-bams" \
---batch_number 123 \
---app_dir "/media/graeberlab/wdtwo/app"
+--base_dir "/path/to/batch-18" \
+--batch_number 18 \
+--app_dir "/app"
 ```
 
 **Script Parameters:**
@@ -117,8 +117,8 @@ nextflow run mutation_calling.nf --with-docker -with-trace \
 ```bash
 nextflow run cnvkit.nf \
 --with-docker -with-trace \
---base_dir /media/graeberlab/wdtwo/dmach/batch20-bams/ \
---ref_dir /media/graeberlab/wdtwo/dmach/references \
+--base_dir /path/to/batch20/ \
+--ref_dir /references \
 --batch_number 20
 ```
 
@@ -161,32 +161,28 @@ nextflow run cnvkit.nf \
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
 | GATK / Mutect2  | 4.2.0.0  | Variant calling |
-| MuSE            | 1.0      | Somatic mutation detection |
-| VEP             | 2016–2022| Variant annotation |
-| CNVkit          | 0.9.10   | Copy number analysis |
+| Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
 | vcf2maf.pl      | 1.6.17   | VCF to MAF conversion |
 | MuSE            | v1.0rc   | Somatic mutation detection |
 | Openjdk/Java (Mutect2)    | 11.0.1  | Java runtime environment |
 | Openjdk/Java (VarScan2)    | 11.0.27  | Java runtime environment |
 | Cromwell        | 60       | Mutect2.wdl execution |
-| OncoKB          | 3.0.0    | Therapeutic annotation |
+| OncoKB          | 3.0.0    | Clinical annotation |
 | VarScan         | v2.4.3   | Variant detection |
-| Ensembl VEP     | 103      | Variant effect prediction |
+| bcftools  | 1.10.2 | BCF file manipulation |
 
-### R Package Dependencies
+#### Copy Number Calling
+| Software        | Version  | Purpose |
+|-----------------|----------|---------|
+| CNVKit  | 0.9.10  | Copy Number Calling |
 
-| R Package      | Version | Purpose |
-|----------------|---------|---------|
-| R               | 4.3.1    | Statistical analysis |
-| dplyr          | 1.1.4   | Data manipulation and filtering |
-| biomaRt        | 2.60.1  | Accessing Ensembl biomart for gene annotations |
-| readxl         | 1.4.5   | Reading Excel files |
-| GenomicRanges  | 1.56.2  | Genomic interval operations and overlap analysis |
-| ggplot2        | 3.5.2   | Data visualization |
-| purrr          | 1.0.4   | Functional programming, specifically reduce() for joining data frames |
-| CNTools        | 1.60.0  | Copy number analysis tools |
-| writexl        | 1.5.4   | Writing Excel files |
-| data.table     | 1.17.2  | Fast data manipulation, specifically fread() function |
+#### Consensus Calling
+| Software        | Version  | Purpose |
+|-----------------|----------|---------|
+| Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
+| vcf2maf.pl      | 1.6.17   | VCF to MAF conversion |
+| OncoKB          | 3.0.0    | Clinical annotation |
+| bcftools  | 1.10.2 | BCF file manipulation |
 
 ### Requirements to Run
 - References folder
@@ -209,7 +205,7 @@ This feature saves significant computational time by skipping completed processe
 **NOTE**: This requires the Nextflow work directory and cache
 
 ### Work Directory
-Nextflow creates a `work/` directory containing temporary files and intermediate outputs. This directory can become quite large (100GB+) and should be cleaned periodically:
+Nextflow creates a `work/` directory containing temporary files and intermediate outputs. This directory can become quite large (100GB - 2 TB) and should be cleaned periodically:
 ```bash
 # Clean work directory after successful completion
 nextflow clean -f
@@ -228,7 +224,23 @@ The pipeline automatically scales resource allocation based on available system 
 ### Primary Outputs
 The main results are organized in the following structure:
 ```
-INSERT DIRECTORY TREE HERE
+base_dir/
+├── preprocessing/
+│   ├── analysis_ready_bams
+│   │   ├── sample_id.BQSR.bam
+├── mutation_calls
+│   │   ├── varscan2
+|   |   |   ├──oncokb_annotation
+|   |   |   ├──vep_annotation
+│   │   ├── Mutect2
+|   |   |   ├──oncokb_annotation
+|   |   |   ├──vep_annotation
+│   │   ├── MuSE
+|   |   |   ├──oncokb_annotation
+|   |   |   ├──vep_annotation
+├── mutation_calls
+│   │   ├── cnv_calling
+|   |   |   ├──segmentation
 ```
 
 **Key Output Files:**
