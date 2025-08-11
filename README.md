@@ -14,8 +14,8 @@
 ### Copy Number Calling
 ![Copy Number Calling](./diagrams/cnvkit.png)
 
-### Copy Number Calling
-![Copy Number Calling](./diagrams/consensus-calling.png)
+### Consensus Calling
+![Consensus Calling](./diagrams/consensus-calling.png)
 
 ## How To Run (Data Processing)
 
@@ -222,29 +222,41 @@ The pipeline automatically scales resource allocation based on available system 
 ## Outputs
 
 ### Primary Outputs
-The main results are organized in the following structure:
+* The pipeline generates results organized similarly to the following directory structure:
 ```
 base_dir/
 ├── preprocessing/
-│   ├── analysis_ready_bams
-│   │   ├── sample_id.BQSR.bam
-├── mutation_calls
-│   │   ├── varscan2
-|   |   |   ├──oncokb_annotation
-|   |   |   ├──vep_annotation
-│   │   ├── Mutect2
-|   |   |   ├──oncokb_annotation
-|   |   |   ├──vep_annotation
-│   │   ├── MuSE
-|   |   |   ├──oncokb_annotation
-|   |   |   ├──vep_annotation
-├── mutation_calls
-│   │   ├── cnv_calling
-|   |   |   ├──segmentation
+│   └── analysis_ready_bams/
+│       └── {sample_id}.BQSR.bam
+├── mutation_calls/
+│   ├── varscan2/
+│   │   ├── oncokb_annotation/
+│   │   │   └── {sample_id}.oncokb.maf
+│   │   └── vep_annotation/
+│   │       └── {sample_id}.vep.vcf
+│   ├── mutect2/
+│   │   ├── oncokb_annotation/
+│   │   │   └── {sample_id}.oncokb.maf
+│   │   └── vep_annotation/
+│   │       └── {sample_id}.vep.vcf
+│   └── muse/
+│       ├── oncokb_annotation/
+│       │   └── {sample_id}.oncokb.maf
+│       └── vep_annotation/
+│           └── {sample_id}.vep.vcf
+└── cnv_calling/
+    └── segmentation/
+        └── {sample_id}.seg
 ```
 
 **Key Output Files:**
-- WORK IN PROGRESS
+
+| File Type | Location | Description |
+|-----------|----------|-------------|
+| **Analysis-ready BAMs** | `preprocessing/analysis_ready_bams/` | Quality-controlled, recalibrated BAM files ready for variant calling |
+| **VEP-annotated VCFs** | `mutation_calls/{caller}/vep_annotation/` | Variant calls annotated with Variant Effect Predictor |
+| **OncoKB-annotated MAFs** | `mutation_calls/{caller}/oncokb_annotation/` | Mutation calls in MAF format with OncoKB clinical annotations |
+| **Segmentation files** | `cnv_calling/segmentation/` | Copy number variant segments in SEG format |
 
 ### Logs
 All execution logs and resource usage reports:
@@ -266,10 +278,6 @@ All execution logs and resource usage reports:
 4. Ensure Docker containers can access mounted directories
 5. Ensure `reference` and `app` folders are downloaded and accessible via Nextflow params
 
-## Citation
-If you use WESley in your research, please cite:
-* WIP
-
 ## Contributors
 - **Dien Ethan Mach** - Pipeline development and maintenance
 - **Cassidy Andrasz** - Testing and optimization
@@ -277,4 +285,4 @@ If you use WESley in your research, please cite:
 
 ---
 
-**For questions or support, please contact:** demach@mednet.ucla.edu
+**For questions or support, please contact:** dienethanmach@gmail.com
