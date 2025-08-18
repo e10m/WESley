@@ -88,5 +88,5 @@ workflow {
     batch_num_channel = channel.value(params.batch_number)
 
     // combine batch_number into the tuples
-    mafs_with_batch_num = oncokb_annotated_files.combine(batch_num_channel)
+    oncokb_annotated_files.combine(batch_num_channel)
 }

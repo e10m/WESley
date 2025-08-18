@@ -1,0 +1,24 @@
+name: Nextflow Linter
+
+on:
+  push:
+    branches: 
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pull Docker image
+        run: |
+          docker pull nextflow/nextflow:25.04.6
+            
+      - name: Run Nextflow linter
+        run: |
+          docker run -v $(pwd):/github -w /github nextflow/nextflow:25.04.6 nextflow lint .

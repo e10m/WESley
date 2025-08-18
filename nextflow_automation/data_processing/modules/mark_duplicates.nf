@@ -12,8 +12,6 @@ Python version: 3.6.10.
 
 process MARK_DUPES {
     tag "$sample_id"
-    container 'broadinstitute/gatk:4.2.0.0'
-    containerOptions = "-v ${params.base_dir}:/base_dir"
     cpus params.cpus
 
     input:
