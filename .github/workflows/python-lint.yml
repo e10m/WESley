@@ -1,0 +1,25 @@
+name: Python Linter
+
+on:
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    python-lint:
+        runs-on: ubuntu-latest
+        container: 
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Pull Docker image
+              run: |
+                docker pull jupyter/scipy-notebook:python-3.10
+            - name: Run Python linter
+              run: |
+                docker run --rm -v $(pwd):/data jupyter/scipy-notebook:python-3.10 bash -c "
+                pip install pylint &&
+                pylint --recursive=y /data/nextflow_automation"
