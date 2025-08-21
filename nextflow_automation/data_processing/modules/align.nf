@@ -10,7 +10,6 @@ BWA version: 0.7.17
 
 process BWA_ALIGN {
     tag "${sample_id}_${lane}"
-    container 'quay.io/biocontainers/bwa:0.7.17--ha92aebf_3'
     cpus params.cpus
 
     input:

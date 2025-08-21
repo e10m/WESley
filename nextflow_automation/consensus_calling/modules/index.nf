@@ -8,6 +8,7 @@ samtools version: 1.10.
 
 process INDEX {
     tag "${sample_id}"
+    cpus 1
     
     input:
     tuple val(sample_id), path(mutect2_vcf), path(muse_vcf), path(varscan2_vcf)

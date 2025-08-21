@@ -10,7 +10,6 @@ Python version: 3.6.10.
 
 process APPLY_BQSR {
     tag "$sample_id"
-    container 'broadinstitute/gatk:4.2.0.0'
     publishDir "${params.base_dir}/preprocessing/analysis_ready_bams", mode: 'copy'
     cpus params.cpus
 

@@ -9,10 +9,7 @@ Python version: 3.6.10.
 
 process SET_TAGS {
     tag "$sample_id"
-    container 'broadinstitute/gatk:4.2.0.0'
-    executor 'local'
     cpus 1
-    maxForks 30
 
     input:
     tuple val(sample_id), path(marked_bam), path(index), path(sliced_index)

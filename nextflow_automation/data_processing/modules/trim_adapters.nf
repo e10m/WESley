@@ -9,7 +9,7 @@ TrimGalore version: 0.6.6
 
 process TRIM {
     tag "${sample_id}_${lane}"
-    container 'quay.io/biocontainers/trim-galore:0.6.6--0'
+    cpus 8
 
     input:
     tuple val(sample_id), val(lane), path(read1), path(read2), val(platform), val(seq_center), val(mouse_flag)

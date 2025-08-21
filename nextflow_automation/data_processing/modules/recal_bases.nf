@@ -10,7 +10,6 @@ Python version: 3.6.10.
 
 process RECAL_BASES {
     tag "$sample_id"
-    container 'broadinstitute/gatk:4.2.0.0'
     cpus params.cpus
 
     input:
