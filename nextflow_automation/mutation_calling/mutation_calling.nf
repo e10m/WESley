@@ -137,11 +137,5 @@ workflow {
     renamed_files = RENAME_HG38(nonsynonymous_mutations)
 
     // oncokb annotation for clinical relevance
-    oncokb_annotated_files = ONCOKB(renamed_files)
-
-    // channel in batch number
-    batch_num_channel = channel.value(params.batch_number)
-
-    // combine batch_number into the tuples
-    oncokb_annotated_files.combine(batch_num_channel)
+    ONCOKB(renamed_files)
 }

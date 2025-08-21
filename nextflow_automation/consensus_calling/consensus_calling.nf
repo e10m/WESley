@@ -32,16 +32,6 @@ workflow {
         exit 1
     }
 
-    if (!params.metadata) {
-        error "ERROR: --metadata parameter is required"
-        exit 1
-    }
-
-    if (!params.app_dir) {
-        error "ERROR: --app_dir parameter is required"
-        exit 1
-    }
-
     // Show help message if requested
     if (params.help) {
         help = """Usage:

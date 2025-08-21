@@ -39,17 +39,16 @@ workflow {
         Required arguments:
         --base_dir                    Path to the base directory containing input data
         --ref_dir                     Path to the reference directory
-        
+        --metadata                    Path to metadata file
+
         Optional arguments:
-        --metadata                    Path to metadata file (default: null)
         --cpus                        Number of CPUs to use for processing (default: 30)
-        --outdir                      The output directory where the results will be saved (default: ./results)
         --help                        Show this help message and exit
         
         Examples:
         
         # Basic usage with required parameters
-        nextflow -C nextflow.config run data_processing.nf --base_dir /path/to/data --ref_dir /path/to/reference
+        nextflow -C nextflow.config run data_processing.nf --base_dir /path/to/data --ref_dir /path/to/reference --metadata /path/to/metadata
         """
         
         // Print the help and exit

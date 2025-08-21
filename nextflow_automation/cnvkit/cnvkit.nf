@@ -26,6 +26,11 @@ workflow {
         error "ERROR: --ref_dir parameter is required"
         exit 1
     }
+    
+    if (!params.batch_number) {
+        error "ERROR: --batch_number parameter is required"
+        exit 1
+    }
 
     // Show help message if requested
     if (params.help) {
@@ -33,11 +38,12 @@ workflow {
 
         The typical command for running the pipeline is as follows:
         
-        nextflow -C <CONFIG_PATH> run cnvkit.nf --base_dir <PATH> --ref_dir <PATH> [OPTIONS]
+        nextflow -C <CONFIG_PATH> run cnvkit.nf --base_dir <PATH> --ref_dir <PATH> --batch_number <INT> [OPTIONS]
         
         Required arguments:
         --base_dir                    Path to the base directory containing input data
         --ref_dir                     Path to the reference directory
+        --batch_number                The batch number being processed (eg: 20)
         
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
@@ -46,7 +52,7 @@ workflow {
         Examples:
         
         # Basic usage with required parameters
-        nextflow -C nextflow.config run cnvkit.nf --base_dir /path/to/data --ref_dir /path/to/reference
+        nextflow -C nextflow.config run cnvkit.nf --base_dir /path/to/data --ref_dir /path/to/reference --batch_number <INT>
         """
         
         // Print the help and exit
