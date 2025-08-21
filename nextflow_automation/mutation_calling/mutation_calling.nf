@@ -18,6 +18,61 @@ include { ONCOKB } from './modules/oncokb.nf'
 
 // main workflow
 workflow {
+    // Parameter validation
+    if (!params.base_dir) {
+        error "ERROR: --base_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.metadata) {
+        error "ERROR: --metadata parameter is required"
+        exit 1
+    }
+
+    if (!params.app_dir) {
+        error "ERROR: --app_dir parameter is required"
+        exit 1
+    }
+
+    // Show help message if requested
+    if (params.help) {
+        help = """Usage:
+
+        The typical command for running the pipeline is as follows:
+        
+        nextflow -C <CONFIG_PATH> run mutation_calling.nf --base_dir <PATH> --ref_dir <PATH> --metadata <PATH> --app_dir <PATH> [OPTIONS]
+        
+        Required arguments:
+        --base_dir                    Path to the base directory containing input data
+        --ref_dir                     Path to the reference directory
+        --metadata                    Path to the metadata sheet created by 'make_mc_metasheet.py'
+        --app_dir                     Path to the app directory containing additional scripts and .jar files
+        
+        Optional arguments:
+        --cpus                        Number of CPUs to use for processing (default: 30)
+        --help                        Show this help message and exit
+        
+        Examples:
+        
+        # Basic usage with required parameters
+        nextflow -C nextflow.config \
+            run mutation_calling.nf \
+            --base_dir /path/to/data \
+            --ref_dir /path/to/reference \
+            --metadata /path/to/metadata \
+            --app_dir /path/to/app
+        """
+
+        // Print the help and exit
+        println(help)
+        exit(0)
+    }
+    
     // channel in metadata and save as a set for downstream processes
     Channel
         .fromPath(params.metadata)

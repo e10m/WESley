@@ -9,8 +9,54 @@ include { SET_TAGS } from './modules/set_tags.nf'
 include { RECAL_BASES } from './modules/recal_bases.nf'
 include { APPLY_BQSR } from './modules/apply_BQSR.nf'
 
+
 // main workflow
 workflow {
+    // Parameter validation
+    if (!params.base_dir) {
+        error "ERROR: --base_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.metadata) {
+        error "ERROR: --metadata parameter is required"
+        exit 1
+    }
+
+    // Show help message if requested
+    if (params.help) {
+        help = """Usage:
+
+        The typical command for running the pipeline is as follows:
+        
+        nextflow -C <CONFIG_FILE> run data_processing.nf --base_dir <PATH> --ref_dir <PATH> --metadata <PATH> [OPTIONS]
+        
+        Required arguments:
+        --base_dir                    Path to the base directory containing input data
+        --ref_dir                     Path to the reference directory
+        
+        Optional arguments:
+        --metadata                    Path to metadata file (default: null)
+        --cpus                        Number of CPUs to use for processing (default: 30)
+        --outdir                      The output directory where the results will be saved (default: ./results)
+        --help                        Show this help message and exit
+        
+        Examples:
+        
+        # Basic usage with required parameters
+        nextflow -C nextflow.config run data_processing.nf --base_dir /path/to/data --ref_dir /path/to/reference
+        """
+        
+        // Print the help and exit
+        println(help)
+        exit(0)
+    }
+
     // channel in metadata and save as a set for downstream processes
     Channel
         .fromPath(params.metadata)
