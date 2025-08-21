@@ -10,9 +10,8 @@ BBMap version: BBMap version 38.06
 
 process SPLIT {
     tag "${sample_id}_${lane}"
-    container 'quay.io/biocontainers/bbmap:38.06--0'
     cpus params.cpus
-
+    
     input:
     tuple val(sample_id), val(lane), path(contaminated_read1), path(contaminated_read2), val(platform), val(seq_center), val(mouse_flag)
     
