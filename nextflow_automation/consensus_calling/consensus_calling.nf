@@ -21,6 +21,47 @@ include { ONCOKB } from './modules/oncokb.nf'
 
 // main workflow
 workflow {
+    // Parameter validation
+    if (!params.base_dir) {
+        error "ERROR: --base_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
+    // Show help message if requested
+    if (params.help) {
+        help = """Usage:
+
+        The typical command for running the pipeline is as follows:
+        
+        nextflow -C <CONFIG_PATH> run consensus_calling.nf --base_dir <PATH> --ref_dir <PATH> [OPTIONS]
+        
+        Required arguments:
+        --base_dir                    Path to the base directory containing input data
+        --ref_dir                     Path to the reference directory
+        
+        Optional arguments:
+        --cpus                        Number of CPUs to use for processing (default: 30)
+        --help                        Show this help message and exit
+        
+        Examples:
+        
+        # Basic usage with required parameters
+        nextflow -C nextflow.config \
+            run consensus_calling.nf \
+            --base_dir /path/to/data \
+            --ref_dir /path/to/reference \
+        """
+
+        // Print the help and exit
+        println(help)
+        exit(0)
+    }
+
     // channel in vcfs from 3 different variant callers (Mutect2, MuSE, VarScan2)
     mutect2_vcfs = channel.fromPath("${params.base_dir}/**/*mutect2.paired.vep.vcf*")
         .map { file -> [file.baseName.replaceAll(/\.mutect2.*/, ''), file] }
