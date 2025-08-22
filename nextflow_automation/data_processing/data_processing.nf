@@ -56,6 +56,20 @@ workflow {
         exit(0)
     }
 
+    // workflow logging
+    log.info """/
+    ${params.manifest.name ?: 'Unknown'} v${params.manifest.version ?: 'Unknown'}
+    ===================================================
+    Command ran         : ${workflow.commandLine}
+    Started on          : ${workflow.start}
+    Config File used    : ${workflow.configFiles ?: 'None specified'}
+    Container(s)        : ${workflow.containerEngine}:${workflow.container ?: 'None'}
+    """.stripIndent()
+
+    ////////////////////////////
+    // Start of main workflow //
+    ////////////////////////////
+
     // channel in metadata and save as a set for downstream processes
     Channel
         .fromPath(params.metadata)
