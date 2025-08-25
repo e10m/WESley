@@ -21,17 +21,6 @@ include { ONCOKB } from './modules/oncokb.nf'
 
 // main workflow
 workflow {
-    // Parameter validation
-    if (!params.base_dir) {
-        error "ERROR: --base_dir parameter is required"
-        exit 1
-    }
-
-    if (!params.ref_dir) {
-        error "ERROR: --ref_dir parameter is required"
-        exit 1
-    }
-
     // Show help message if requested
     if (params.help) {
         help = """Usage:
@@ -62,14 +51,26 @@ workflow {
         exit(0)
     }
 
+    // Parameter validation
+    if (!params.base_dir) {
+        error "ERROR: --base_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
     // workflow logging
     log.info """/
-    ${params.manifest.name ?: 'Unknown'} v${params.manifest.version ?: 'Unknown'}
+    ${workflow.manifest.name ?: 'Unknown'}
     ===================================================
     Command ran         : ${workflow.commandLine}
     Started on          : ${workflow.start}
     Config File used    : ${workflow.configFiles ?: 'None specified'}
     Container(s)        : ${workflow.containerEngine}:${workflow.container ?: 'None'}
+    Nextflow Version    : ${workflow.manifest.nextflowVersion}
     """.stripIndent()
 
     ////////////////////////////
