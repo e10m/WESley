@@ -36,7 +36,7 @@ process MAKE_JSON {
                 "Mutect2.tumor_reads"                               : "${tumor_bam}",
                 "Mutect2.tumor_reads_index"                         : "${tumor_bai}",
                 "Mutect2.gnomad"                                    : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz",
-                "Mutect2.gnomad_idx"                                : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi",
+                "Mutect2.gnomad_idx"                                : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi"
         }
 EOF
     
