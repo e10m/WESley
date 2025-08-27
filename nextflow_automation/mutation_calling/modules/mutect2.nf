@@ -38,7 +38,7 @@ process MUTECT2 {
     fi
 
     # remove cromwell directories
-    sudo chown -R $(whoami):$(whoami) cromwell* || true
+    sudo chown -R \$(whoami):\$(whoami) cromwell* || true
     rm -rf cromwell-executions || true
     """
 }
