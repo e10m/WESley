@@ -36,5 +36,8 @@ process MUTECT2 {
     elif [[ "$json" == *"tumorOnly"* ]]; then
         mv "\$FILTER_EXEC/filtered.vcf" "${sample_id}.mutect2.tumorOnly.filtered.vcf"
     fi
+
+    # remove cromwell directories
+    rm -rf cromwell-executions || true
     """
 }

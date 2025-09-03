@@ -36,9 +36,7 @@ process MAKE_JSON {
                 "Mutect2.tumor_reads"                               : "${tumor_bam}",
                 "Mutect2.tumor_reads_index"                         : "${tumor_bai}",
                 "Mutect2.gnomad"                                    : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz",
-                "Mutect2.gnomad_idx"                                : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi",
-                "Mutect2.pon"                                       : "${params.ref_dir}/Batch1to8.pon.vcf.gz",
-                "Mutect2.pon_idx"                                   : "${params.ref_dir}/Batch1to8.pon.vcf.gz.tbi"
+                "Mutect2.gnomad_idx"                                : "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi"
         }
 EOF
     
@@ -63,8 +61,6 @@ EOF
             "Mutect2.normal_reads_index": "${normal_bai}",
             "Mutect2.tumor_reads": "${tumor_bam}",
             "Mutect2.tumor_reads_index": "${tumor_bai}",
-            "Mutect2.pon": "${params.ref_dir}/Batch1to8.pon.vcf.gz",
-            "Mutect2.pon_idx": "${params.ref_dir}/Batch1to8.pon.vcf.gz.tbi",
             "Mutect2.gnomad": "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz",
             "Mutect2.gnomad_idx": "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi",
             "Mutect2.variants_for_contamination": "${params.ref_dir}/small_exac_common_3.hg38.vcf.gz",
