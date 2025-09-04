@@ -8,7 +8,10 @@ include { MARK_DUPES } from './modules/mark_duplicates.nf'
 include { SET_TAGS } from './modules/set_tags.nf'
 include { RECAL_BASES } from './modules/recal_bases.nf'
 include { APPLY_BQSR } from './modules/apply_BQSR.nf'
-
+include { FASTQC_RAW } from './modules/fastqc_raw.nf'
+include { FASTQC_TRIMMED } from './modules/fastqc_trimmed.nf'
+include { FASTQC_BBSPLIT } from './modules/fastqc_bbsplit.nf'
+include { MULTIQC } from './modules/multiqc.nf'
 
 // main workflow
 workflow {
@@ -70,7 +73,7 @@ workflow {
     ////////////////////////////
     // Start of main workflow //
     ////////////////////////////
-
+    
     // channel in metadata and save as a set for downstream processes
     Channel
         .fromPath(params.metadata)
@@ -87,8 +90,14 @@ workflow {
         }
         .set { reads }
 
+    // run FASTQC on raw reads
+    FASTQC_RAW(reads)
+
     // trim FASTQs using TrimGalore
     trimmed_reads = TRIM(reads)
+
+    // FASTQC on trimmed reads
+    FASTQC_TRIMMED(trimmed_reads)
 
     // diverge the data channel into contaminated/uncontaminated reads
     uncontaminated_reads = trimmed_reads.filter { it -> it[6] != true }  // mouse_flag is false
@@ -97,9 +106,12 @@ workflow {
     // run BBSplit on only mouse-contaminated reads
     SPLIT(contaminated_reads)
     human_fastqs = SPLIT.out.fastqs
+
+    // run FASTQC on human reads
+    FASTQC_BBSPLIT(human_fastqs)
     
     // concatenate the channels and converge data channels again
-    merged_uncontaminated_reads = uncontaminated_reads.concat(human_fastqs)
+    merged_uncontaminated_reads = uncontaminated_reads.concat(human_fastqs)    
 
     // align trimmed FASTQs via BWA-mem
     sorted_bam_files = BWA_ALIGN(merged_uncontaminated_reads)
@@ -128,4 +140,8 @@ workflow {
 
     // apply the BQSR algorithm
     APPLY_BQSR(recal_data_tables)
+    
+    // run MultiQC once the entire workflow completes
+    completion_signal = APPLY_BQSR.out.collect().map { "ready" }
+    MULTIQC(completion_signal)
 }
