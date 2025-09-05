@@ -9,7 +9,6 @@ FastQC version: v0.11.9
 
 process FASTQC_RAW {
     tag "${sample_id}_${lane}"
-    cpus params.cpus
 
     input:
     tuple val(sample_id), val(lane), path(read1), path(read2), val(platform), val(seq_center), val(mouse_flag)
@@ -20,6 +19,6 @@ process FASTQC_RAW {
     script:
     """
     fastqc $read1 $read2 \
-    -t ${task.cpus}
+    -t ${params.cpus}
     """
 }
