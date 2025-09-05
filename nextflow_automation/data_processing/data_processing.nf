@@ -9,9 +9,8 @@ include { SET_TAGS } from './modules/set_tags.nf'
 include { RECAL_BASES } from './modules/recal_bases.nf'
 include { APPLY_BQSR } from './modules/apply_BQSR.nf'
 include { FASTQC_RAW } from './modules/fastqc_raw.nf'
-include { FASTQC_TRIMMED } from './modules/fastqc_trimmed.nf'
-include { FASTQC_BBSPLIT } from './modules/fastqc_bbsplit.nf'
 include { MULTIQC } from './modules/multiqc.nf'
+include { CALC_COVERAGE } from './modules/calc_coverage.nf'
 
 // main workflow
 workflow {
@@ -96,9 +95,6 @@ workflow {
     // trim FASTQs using TrimGalore
     trimmed_reads = TRIM(reads)
 
-    // FASTQC on trimmed reads
-    FASTQC_TRIMMED(trimmed_reads)
-
     // diverge the data channel into contaminated/uncontaminated reads
     uncontaminated_reads = trimmed_reads.filter { it -> it[6] != true }  // mouse_flag is false
     contaminated_reads = trimmed_reads.filter { it -> it[6] == true }  // mouse_flag is true
@@ -106,9 +102,6 @@ workflow {
     // run BBSplit on only mouse-contaminated reads
     SPLIT(contaminated_reads)
     human_fastqs = SPLIT.out.fastqs
-
-    // run FASTQC on human reads
-    FASTQC_BBSPLIT(human_fastqs)
     
     // concatenate the channels and converge data channels again
     merged_uncontaminated_reads = uncontaminated_reads.concat(human_fastqs)    
@@ -139,9 +132,12 @@ workflow {
     recal_data_tables = RECAL_BASES(tagged_bams)
 
     // apply the BQSR algorithm
-    APPLY_BQSR(recal_data_tables)
-    
+    analysis_ready_bams = APPLY_BQSR(recal_data_tables)
+
+    // use Picard to calculate coverage statistics on analysis ready bams
+    CALC_COVERAGE(analysis_ready_bams)
+
     // run MultiQC once the entire workflow completes
-    completion_signal = APPLY_BQSR.out.collect().map { "ready" }
+    completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
     MULTIQC(completion_signal)
 }
