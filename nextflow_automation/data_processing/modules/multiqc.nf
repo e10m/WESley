@@ -9,16 +9,17 @@ MultiQC version: v1.30.
 
 process MULTIQC {
     publishDir "${params.base_dir}/QC", mode: 'copy'
+    containerOptions "-v ${workflow.workDir}:/work"
 
     input:
-    val ready
-    
+    val "ready"
+
     output:
     path("multiqc_report.html")
-    path("multiqc_data/*")
+    path("multiqc*/*")
 
     script:
     """
-    multiqc ${workflow.workDir}
+    multiqc /work
     """
 }

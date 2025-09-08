@@ -139,5 +139,6 @@ workflow {
 
     // run MultiQC once the entire workflow completes
     completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
+
     MULTIQC(completion_signal)
 }
