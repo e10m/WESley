@@ -23,10 +23,10 @@ import pandas as pd
 # initialize argparser and the arguments
 parser = argparse.ArgumentParser(description="Simple metadata sheet generator for WES pipeline")
 
-parser.add_argument('-f','--fastq_directory', type=str, required=True, default='/media/graeberlab/wdtwo/dmach',
+parser.add_argument('-f','--fastq_directory', type=str, required=True,
                     help="Directory where the FASTQ data is")
 
-parser.add_argument('-b', '--batch_number', type=int, required=True, default=18,
+parser.add_argument('-b', '--batch_number', type=int, required=True,
                     help="Batch number for the WES data being analyzed")
 
 parser.add_argument('-p', '--platform', type=str, default='Illumina_NovaSeqXPlus', required=True,
