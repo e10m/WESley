@@ -156,13 +156,15 @@ nextflow run cnvkit.nf \
 | BBMap           | 38.06    | Read mapping and QC |
 | SAMtools        | 1.10     | BAM file manipulation |
 | BWA             | 0.7.17   | Read alignment |
+| FastQC          | v0.11.9  | Quality control |
+| MultiQC         | v1.30    | Quality control aggregation |
 
 #### Mutation Calling 
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
 | GATK / Mutect2  | 4.2.0.0  | Variant calling |
 | Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
-| vcf2maf.pl      | 1.6.17   | VCF to MAF conversion |
+| vcf2maf.pl      | 1.6.19   | VCF to MAF conversion |
 | MuSE            | v1.0rc   | Somatic mutation detection |
 | Openjdk/Java (Mutect2)    | 11.0.1  | Java runtime environment |
 | Openjdk/Java (VarScan2)    | 11.0.27  | Java runtime environment |
@@ -180,18 +182,21 @@ nextflow run cnvkit.nf \
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
 | Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
-| vcf2maf.pl      | 1.6.17   | VCF to MAF conversion |
+| vcf2maf.pl      | 1.6.19   | VCF to MAF conversion |
 | OncoKB          | 3.0.0    | Clinical annotation |
 | bcftools  | 1.10.2 | BCF file manipulation |
 
 ### Requirements to Run
-- References folder
+- Ensure the proper references and metadata are downloaded
 - Docker, Nextflow, and Java 11.0.1 installed on a conda environment
   - conda install conda-forge/label/cf201901::openjdk=11.0.1
   - conda install bioconda::nextflow=24.10.5
   - conda install conda-forge::docker
 - FASTQ files need to be compressed (.gz)
 - Install cromwell-60.jar, gatk-package-4.2.0.0-local.jar, and mutect2.wdl in `$app_dir`
+- Pull all Docker images
+  - `$ cd containerization/`
+  - `$ docker compose pull`
 
 ## Nextflow Features & Quirks
 
