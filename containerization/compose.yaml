@@ -1,0 +1,63 @@
+services:
+  # CNVkit containers
+  cnvkit:
+    image: quay.io/biocontainers/cnvkit:0.9.10--pyhdfd78af_0
+    command: "true"
+
+  # data processing containers
+  trim-galore:
+    image: quay.io/biocontainers/trim-galore:0.6.6--0
+    command: "true"
+
+  bbmap:
+    image: quay.io/biocontainers/bbmap:38.06--0
+    command: "true"
+
+  bwa-samtools:
+    image: e10m/bwa-and-samtools:latest
+    command: "true"
+
+  gatk:
+    image: broadinstitute/gatk:4.2.0.0
+    command: "true"
+
+  fastqc:
+    image: biocontainers/fastqc:v0.11.9_cv8
+    command: "true"
+
+  multiqc:
+    image: multiqc/multiqc:v1.30
+    command: "true"
+
+  # mutation/consensus calling containers
+  samtools:
+    image: quay.io/biocontainers/samtools:1.10--h9402c20_1
+    command: "true"
+
+  muse:
+    image: quay.io/biocontainers/muse:1.0.rc--1
+    command: "true"
+
+  varscan2:
+    image: e10m/varscan2:latest
+    command: "true"
+
+  vep:
+    image: e10m/vep:106.1
+    command: "true"
+
+  bcftools:
+    image: staphb/bcftools:1.10.2
+    command: "true"
+
+  vcf2maf:
+    image: e10m/vcf2maf:1.6.19
+    command: "true"
+
+  ubuntu:
+    image: ubuntu:20.04
+    command: "true"
+
+  oncokb:
+    image: e10m/oncokb:3.0.0
+    command: "true"
