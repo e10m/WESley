@@ -24,7 +24,7 @@ process BWA_ALIGN {
 
     # run alignment
     bwa mem \\
-        "/references/Homo_sapiens_assembly38.fasta" \\
+        "${params.ref_genome}" \\
         "$trimmed_read_1" \\
         "$trimmed_read_2" \\
         -R "@RG\\tID:${sample_id}\\tSM:${sample_id}\\tPL:${platform}\\tCN:${seq_center}\\tLB:${sample_id}_${lane}\\tDS:${sample_id}_${lane}" \\

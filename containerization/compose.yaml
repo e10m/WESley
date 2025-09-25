@@ -43,7 +43,7 @@ services:
     command: "true"
 
   vep:
-    image: e10m/vep:115
+    image: e10m/vep:106.1
     command: "true"
 
   bcftools:

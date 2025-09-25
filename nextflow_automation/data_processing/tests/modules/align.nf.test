@@ -9,19 +9,23 @@ nextflow_process {
         when {
             params {
                 // creating parameter for easy access to test data
-                test_data = "data_processing/test-data"
+                test_data = "${projectDir}/test-data/fastqs"
+                cpus = 1
+                ref_dir = "${projectDir}/test-data/references"
+                ref_genome = "${projectDir}/test-data/references/Homo_sapiens_assembly38_chr20.fasta"
+
             }
             process {
                 // required inputs for test data
                 """
                 input[0] = [
-                    sample_id: 'dummy',
-                    lane: 'L001',
-                    trimmed_read_1: file("${params.test_data}/dummy_n_R1_xxx.fastq.gz"),
-                    trimmed_read_2: file("${params.test_data}/dummy_n_R2_xxx.fastq.gz"),
-                    platform: 'illumina_novaseq_x',
-                    seq_center: 'tcgb',
-                    mouse_flag: false
+                    'dummy',
+                    'L001',
+                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    'illumina_novaseq_x',
+                    'tcgb',
+                    false
                 ]
                 """
             }
