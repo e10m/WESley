@@ -1,0 +1,46 @@
+nextflow_process {
+    name "Test Process BWA_ALIGN"
+    tag "alignment-test"
+    script "modules/align.nf"
+    process "BWA_ALIGN"
+
+    test("Should align with bwa-mem without failures") {
+
+        when {
+            params {
+                // creating parameter for easy access to test data
+                test_data = "data_processing/test-data"
+            }
+            process {
+                // required inputs for test data
+                """
+                input[0] = [
+                    sample_id: 'dummy',
+                    lane: 'L001',
+                    trimmed_read_1: file("${params.test_data}/dummy_n_R1_xxx.fastq.gz"),
+                    trimmed_read_2: file("${params.test_data}/dummy_n_R2_xxx.fastq.gz"),
+                    platform: 'illumina_novaseq_x',
+                    seq_center: 'tcgb',
+                    mouse_flag: false
+                ]
+                """
+            }
+        }
+
+        then {
+            // check the process succeeded without error messages
+            assert process.success
+
+            // checking outputs
+            with(process.out[0]) {
+                // check if two items in the output tuple
+                assert size() == 2
+
+                // check if the outputs are as expected
+                assert it[0] == 'dummy'
+                assert it[1].name == 'dummy_L001.sorted.bam'
+            }
+        }
+    }
+
+}
