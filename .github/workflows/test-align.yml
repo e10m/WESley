@@ -41,10 +41,13 @@ jobs:
           docker pull e10m/bwa-and-samtools:latest
 
       - name: Install nf-test
+        shell: bash -el {0}
         run: |
-          conda install bioconda::nf-test
+          conda install -y bioconda::nf-test
+          nf-test version
 
       - name: Run nf-test
+        shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing
         run: |
           nf-test test --profile docker
