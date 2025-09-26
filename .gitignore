@@ -1,3 +1,6 @@
 **/metadata.sh
 **/metadata/
 **/*.sh
+**/*CLAUDE*
+**/.nf-test
+**/.nf-test.log

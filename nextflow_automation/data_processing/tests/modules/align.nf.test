@@ -1,0 +1,48 @@
+nextflow_process {
+    name "Test Process BWA_ALIGN"
+    tag "alignment-test"
+    script "modules/align.nf"
+    process "BWA_ALIGN"
+
+    test("Should align via bwa-mem without failures") {
+        when {
+            params {
+                // creating parameter for easy access to test data
+                test_data = "${projectDir}/test-data/fastqs"
+                cpus = 1
+                ref_dir = "${projectDir}/test-data/references"
+                ref_genome = "${projectDir}/test-data/references/Homo_sapiens_assembly38_chr20.fasta"
+            }
+
+            process {
+                // required inputs for test data
+                """
+                input[0] = [
+                    'dummy',
+                    'L001',
+                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    'illumina_novaseq_x',
+                    'tcgb',
+                    false
+                ]
+                """
+            }
+        }
+
+        then {
+            // check the process succeeded without error messages
+            assert process.success
+
+            // directly access the output tuple
+            def outputTuple = process.out[0][0]
+
+            assert outputTuple.size() == 2  // check output tuple size
+            assert outputTuple[0] == 'dummy'  // sample_id
+
+            // check if file exists and named correctly
+            assert file(outputTuple[1]).name == 'dummy_L001.sorted.bam'
+            assert file(outputTuple[1]).exists()
+        }
+    }
+}
