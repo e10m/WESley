@@ -11,23 +11,41 @@ on:
       - nf-test
 
 jobs:
-  test:
+  alignment-test:
     runs-on: ubuntu-latest
-    container:
-      image: quay.io/biocontainers/nf-test:0.7.3--h4a94de4_0
-      options: --privileged
       
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+            distribution: 'temurin'
+            java-version: '11'
+
       - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: '24.10.5'
+
+      - name: Install miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          channels: bioconda,conda-forge,defaults
+          
+
+      - name: Pull custom Docker image
         run: |
-          curl -s https://get.nextflow.io | bash
-          mv nextflow /usr/local/bin/
-          nextflow -version
+          docker pull e10m/bwa-and-samtools:latest
+
+      - name: Install nf-test
+        run: |
+          conda install bioconda::nf-test
 
       - name: Run nf-test
-        working-directory: ./nextflow_automation/data_processing
+        working-directory: ./WESley/nextflow_automation/data_processing
         run: |
-          nf-test test --verbose
+          nf-test test --profile docker
