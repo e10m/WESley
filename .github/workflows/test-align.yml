@@ -1,0 +1,33 @@
+name: Alignment Unit Test
+
+on:
+  push:
+    branches: 
+      - main
+      - nf-test
+  pull_request:
+    branches:
+      - main
+      - nf-test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/biocontainers/nf-test:0.7.3--h4a94de4_0
+      options: --privileged
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nextflow
+        run: |
+          curl -s https://get.nextflow.io | bash
+          mv nextflow /usr/local/bin/
+          nextflow -version
+
+      - name: Run nf-test
+        working-directory: ./nextflow_automation/data_processing
+        run: |
+          nf-test test --verbose
