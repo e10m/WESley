@@ -35,7 +35,6 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
           channels: bioconda,conda-forge,defaults
-          
 
       - name: Pull custom Docker image
         run: |
@@ -46,6 +45,6 @@ jobs:
           conda install bioconda::nf-test
 
       - name: Run nf-test
-        working-directory: ./WESley/nextflow_automation/data_processing
+        working-directory: ./nextflow_automation/data_processing
         run: |
           nf-test test --profile docker
