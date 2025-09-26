@@ -50,4 +50,4 @@ jobs:
         shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing
         run: |
-          nf-test test --profile docker
+          nf-test test
