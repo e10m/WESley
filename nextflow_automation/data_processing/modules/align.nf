@@ -24,14 +24,16 @@ process BWA_ALIGN {
 
     # set reference genome based on testing vs. production env
     if [ "${params.test_mode}" == "true" ] ; then
-        REF_GENOME="${params.ref_dir}/Homo_sapiens_assembly38_chr20.fasta"
+        REF_GENOME="Homo_sapiens_assembly38_chr20.fasta"
     else
-        REF_GENOME="${params.ref_dir}/Homo_sapiens_assembly38.fasta"
+        REF_GENOME="Homo_sapiens_assembly38.fasta"
     fi
+
+    echo "Aligning with reference genome \$REF_GENOME"
 
     # run alignment
     bwa mem \\
-        "\$REF_GENOME" \\
+        "/references/\$REF_GENOME" \\
         "$trimmed_read_1" \\
         "$trimmed_read_2" \\
         -R "@RG\\tID:${sample_id}\\tSM:${sample_id}\\tPL:${platform}\\tCN:${seq_center}\\tLB:${sample_id}_${lane}\\tDS:${sample_id}_${lane}" \\
