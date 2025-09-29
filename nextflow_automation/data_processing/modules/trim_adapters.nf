@@ -22,7 +22,7 @@ process TRIM {
     echo "Trimming $sample_id on $lane..."
     
     trim_galore --illumina \
-    --cores 8 \
+    --cores ${task.cpus} \
     --paired $read1 $read2 \
     --basename "${sample_id}_${lane}"
     """
