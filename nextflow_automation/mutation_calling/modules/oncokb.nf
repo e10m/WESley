@@ -13,6 +13,7 @@ process ONCOKB {
     publishDir "${params.base_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*vep.nonsynonymous*"
     publishDir "${params.base_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*vep.nonsynonymous*"
     cpus 1
+    secret 'ONCOKB_API_KEY'
 
     input:
     tuple val(sample_id), path(nonsyno_maf)
@@ -40,7 +41,7 @@ process ONCOKB {
     -i $nonsyno_maf \
     -o \$OUTPUT_NAME \
     -r GRCh38 \
-    -b "\$ONCOKB_TOKEN" \
+    -b "\$ONCOKB_API_KEY" \
     -t BRAIN
     """
 }

@@ -1,7 +1,7 @@
 # 🧬 WESley: Whole Exome Sequencing Pipeline
 
 ## Overview
-**WESley** is a modular [Nextflow](https://www.nextflow.io/) pipeline designed for analyzing **whole exome sequencing (WES)** data. It automates **data preprocessing**, **somatic mutation calling**, and **copy number variation (CNV)** analysis from raw FASTQ files of patient-derived samples.
+**WESley** is a modular [Nextflow](https://www.nextflow.io/) pipeline designed for analyzing **whole exome sequencing (WES)** data. It automates **data preprocessing**, **somatic mutation calling**, and **copy number variation (CNV)** analysis from raw FASTQ files of patient-derived tumor samples. The pipeline maintains HIPAA-compliance and reinforces reproducible workflows to support ongoing neuro-oncology research at UCLA.
 
 ---
 ## Workflow Diagrams
@@ -89,8 +89,8 @@ python make_mc_metasheet.py \
 ### 2. Run Mutation Calling:
 
 ```bash
-# Set OncoKB API token from file
-export ONCOKB_TOKEN=$(cat /references/oncokb-token.txt)
+# Set OncoKB API token via Nextflow secrets (only needs to be used once)
+nextflow secrets set ONCOKB_API_KEY "your_actual_API_token"
 
 # Run the pipeline
 nextflow run mutation_calling.nf --with-docker -with-trace \
