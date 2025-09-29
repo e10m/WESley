@@ -11,7 +11,7 @@ nextflow_process {
                 test_data = "${projectDir}/test-data/fastqs"
                 cpus = 1
                 ref_dir = "${projectDir}/test-data/references"
-                test = true
+                test_mode = true
             }
 
             process {
