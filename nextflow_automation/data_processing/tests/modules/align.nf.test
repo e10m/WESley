@@ -11,7 +11,7 @@ nextflow_process {
                 test_data = "${projectDir}/test-data/fastqs"
                 cpus = 1
                 ref_dir = "${projectDir}/test-data/references"
-                ref_genome = "${projectDir}/test-data/references/Homo_sapiens_assembly38_chr20.fasta"
+                test = true
             }
 
             process {
