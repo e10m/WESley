@@ -73,21 +73,30 @@ workflow {
     // Start of main workflow //
     ////////////////////////////
     
-    // channel in metadata and save as a set for downstream processes
-    Channel
-        .fromPath(params.metadata)
-        .splitCsv(header: true, sep: '\t')
-        .map { row ->
-            def sample_id  = row.Sample_ID
-            def lane       = row.Lane
-            def fastq_1    = file("${params.base_dir}/**/${row.FASTQ_R1}")
-            def fastq_2    = file("${params.base_dir}/**/${row.FASTQ_R2}")
-            def platform   = row.Platform
-            def seq_center = row.Sequencing_Center
-            def mouse_flag = row.Mouse_Flag.toLowerCase() == 'true'
-            tuple(sample_id, lane, fastq_1, fastq_2, platform, seq_center, mouse_flag)
-        }
-        .set { reads }
+    // define data channel depending on production vs. testing environment
+    if (!params.test_mode) {
+        // channel in metadata and save as a set for downstream processes
+        Channel
+            .fromPath(params.metadata)
+            .splitCsv(header: true, sep: '\t')
+            .map { row ->
+                def sample_id  = row.Sample_ID
+                def lane       = row.Lane
+                def fastq_1    = file("${params.base_dir}/**/${row.FASTQ_R1}")
+                def fastq_2    = file("${params.base_dir}/**/${row.FASTQ_R2}")
+                def platform   = row.Platform
+                def seq_center = row.Sequencing_Center
+                def mouse_flag = row.Mouse_Flag.toLowerCase() == 'true'
+                tuple(sample_id, lane, fastq_1, fastq_2, platform, seq_center, mouse_flag)
+            }
+            .set { reads }
+    }
+    else {
+        // TODO: consider logistics
+        Channel
+            .fromPath()
+            
+    }
 
     // run FASTQC on raw reads
     FASTQC_RAW(reads)

@@ -1,0 +1,29 @@
+nextflow_pipeline {
+
+    name "Test Workflow data_processing.nf"
+    script "data_processing.nf"
+
+    test("Should run data_processing.nf workflow end-to-end without failures") {
+
+        when {
+            params {
+                test_mode = true
+                cpus = 1
+                ref_dir = "${projectDir}/test-data/references"
+            }
+
+            process {
+                // new data channel (tsv) for workflow testing
+                """
+                input[0] = ''
+                """
+            }    
+        }
+
+        then {
+            assert workflow.success
+            assert workflow.size
+        }
+
+    }
+}
