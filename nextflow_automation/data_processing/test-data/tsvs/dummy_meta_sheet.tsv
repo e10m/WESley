@@ -1,0 +1,2 @@
+Sample_ID	Lane	FASTQ_R1	FASTQ_R2	Platform	Sequencing_Center	Mouse_Flag
+tumor_dummy	L001	dummy_t_R1_xxx.fastq.gz	dummy_t_R2_xxx.fastq.gz	Illumina_NovaSeqX	seq_core	False

@@ -16,7 +16,7 @@ process BWA_ALIGN {
     tuple val(sample_id), val(lane), path(trimmed_read_1), path(trimmed_read_2), val(platform), val(seq_center), val(mouse_flag)
     
     output:
-    tuple val(sample_id), path("${sample_id}_${lane}.sorted.bam")
+    tuple val(sample_id), path("${sample_id}_${lane}.sorted.bam"), emit: temp_bams
 
     script:
     """

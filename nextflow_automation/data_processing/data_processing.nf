@@ -13,7 +13,7 @@ include { MULTIQC } from './modules/multiqc.nf'
 include { CALC_COVERAGE } from './modules/calc_coverage.nf'
 
 // main workflow
-workflow {
+workflow DATA_PROCESSING {
     // Show help message if requested
     if (params.help) {
         help = """Usage:
@@ -73,9 +73,12 @@ workflow {
     // Start of main workflow //
     ////////////////////////////
     
+    // ternary statement to define which metadata sheet to use (real vs. dummy-test-tsv)
+    metadata_file = params.test_mode ? params.test_metadata : params.metadata
+
     // channel in metadata and save as a set for downstream processes
     Channel
-        .fromPath(params.metadata)
+        .fromPath(metadata_file)
         .splitCsv(header: true, sep: '\t')
         .map { row ->
             def sample_id  = row.Sample_ID
@@ -141,4 +144,9 @@ workflow {
     completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
 
     MULTIQC(completion_signal)
+
+    // define outputs mainly for testing
+    emit:
+    multiqc_html = MULTIQC.out.multiqc_html
+    coverage_stats = CALC_COVERAGE.out.stats
 }
