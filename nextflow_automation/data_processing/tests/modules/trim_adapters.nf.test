@@ -10,7 +10,6 @@ nextflow_process {
             params {
                 // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/fastqs"
-                cpus = 1
                 ref_dir = "${projectDir}/test-data/references"
                 test_mode = true
             }

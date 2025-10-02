@@ -46,7 +46,7 @@ nextflow_process {
                 assert html_files.size() == 2
                 assert zip_files.size() == 2
 
-                println("\n\n* Both HTML files and zip files found in array")
+                println("\n\n* Both .html files and .zip files found in array")
 
                 // verify all files exist
                 html_files.each { file ->
