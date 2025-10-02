@@ -1,4 +1,4 @@
-name: Data Processing Unit Tests
+name: Data Processing Workflow Unit Tests
 
 on: [push, pull_request]
 
@@ -10,7 +10,7 @@ jobs:
           - test: tests/modules/trim_adapters.nf.test
             image: quay.io/biocontainers/trim-galore:0.6.6--0
           - test: tests/modules/fastqc.nf.test
-            image: quay.io/biocontainers/fastqc:v0.11.9_cv8
+            image: biocontainers/fastqc:v0.11.9_cv7
           - test: tests/modules/align.nf.test
             image: e10m/bwa-and-samtools:latest
     
