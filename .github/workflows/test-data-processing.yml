@@ -1,17 +1,16 @@
-name: Alignment Unit Test
+name: Data Processing Unit Tests
 
 on:
   push:
     branches: 
-      - main
-      - nf-test
+      - '**'
+
   pull_request:
     branches:
       - main
-      - nf-test
 
 jobs:
-  alignment-test:
+  unit-tests:
     runs-on: ubuntu-latest
       
     steps:
@@ -46,14 +45,20 @@ jobs:
           conda install -y bioconda::nf-test
           nf-test version
 
-      - name: Run alignment test
+      - name: Run trimming test
         shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing/
         run: |
-          nf-test test tests/modules/align.nf.test
+          nf-test test tests/modules/trim_adapters.nf.test
 
       - name: Run fastqc test
         shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing/
         run: |
           nf-test test tests/modules/fastqc.nf.test
+
+      - name: Run alignment test
+        shell: bash -el {0}
+        working-directory: ./nextflow_automation/data_processing/
+        run: |
+          nf-test test tests/modules/align.nf.test
