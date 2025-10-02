@@ -1,64 +1,31 @@
 name: Data Processing Unit Tests
 
-on:
-  push:
-    branches: 
-      - '**'
-
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
-  unit-tests:
+  test_data_processing:  # ← Added colon
+    strategy:
+      matrix:
+        include:
+          - test: tests/modules/trim_adapters.nf.test
+            container: quay.io/biocontainers/trim-galore:0.6.6--0  # ← Fixed indentation
+          - test: tests/modules/fastqc.nf.test
+            container: biocontainers/fastqc:v0.11.9_cv8  # ← Fixed indentation
+          - test: tests/modules/align.nf.test
+            container: e10m/bwa-and-samtools:latest  # ← Fixed indentation
+    
     runs-on: ubuntu-latest
-      
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Java
-        uses: actions/setup-java@v4
-        with:
-            distribution: 'temurin'
-            java-version: '11'
+      - name: Setup nf-test
+        uses: ./.github/actions/setup-nf-test  # ← Fixed path (removed extra dot)
 
-      - name: Install Nextflow
-        uses: nf-core/setup-nextflow@v2
-        with:
-          version: '24.10.5'
+      - name: Pull respective Docker container
+        run: docker pull ${{ matrix.container }}
 
-      - name: Install miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          auto-update-conda: true
-          auto-activate-base: true
-          channels: bioconda,conda-forge,defaults
-
-      - name: Pull custom Docker image
-        run: |
-          docker pull e10m/bwa-and-samtools:latest
-
-      - name: Install nf-test
+      - name: Run nf-test
         shell: bash -el {0}
-        run: |
-          conda install -y bioconda::nf-test
-          nf-test version
-
-      - name: Run trimming test
-        shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing/
-        run: |
-          nf-test test tests/modules/trim_adapters.nf.test
-
-      - name: Run fastqc test
-        shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing/
-        run: |
-          nf-test test tests/modules/fastqc.nf.test
-
-      - name: Run alignment test
-        shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing/
-        run: |
-          nf-test test tests/modules/align.nf.test
+        working-directory: ./nextflow_automation/data_processing  # ← Optional: removed trailing slash
+        run: nf-test test ${{ matrix.test }}
