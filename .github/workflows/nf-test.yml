@@ -46,8 +46,14 @@ jobs:
           conda install -y bioconda::nf-test
           nf-test version
 
-      - name: Run nf-test
+      - name: Run alignment test
         shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing/
         run: |
           nf-test test tests/modules/align.nf.test
+
+      - name: Run fastqc test
+        shell: bash -el {0}
+        working-directory: ./nextflow_automation/data_processing/
+        run: |
+          nf-test test tests/modules/fastqc.nf.test

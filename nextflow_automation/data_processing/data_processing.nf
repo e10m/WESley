@@ -8,7 +8,7 @@ include { MARK_DUPES } from './modules/mark_duplicates.nf'
 include { SET_TAGS } from './modules/set_tags.nf'
 include { RECAL_BASES } from './modules/recal_bases.nf'
 include { APPLY_BQSR } from './modules/apply_BQSR.nf'
-include { FASTQC_RAW } from './modules/fastqc_raw.nf'
+include { FASTQC } from './modules/fastqc.nf'
 include { MULTIQC } from './modules/multiqc.nf'
 include { CALC_COVERAGE } from './modules/calc_coverage.nf'
 
@@ -72,13 +72,10 @@ workflow DATA_PROCESSING {
     ////////////////////////////
     // Start of main workflow //
     ////////////////////////////
-    
-    // ternary statement to define which metadata sheet to use (real vs. dummy-test-tsv)
-    metadata_file = params.test_mode ? params.test_metadata : params.metadata
 
     // channel in metadata and save as a set for downstream processes
     Channel
-        .fromPath(metadata_file)
+        .fromPath(params.metadata)
         .splitCsv(header: true, sep: '\t')
         .map { row ->
             def sample_id  = row.Sample_ID
@@ -93,7 +90,7 @@ workflow DATA_PROCESSING {
         .set { reads }
 
     // run FASTQC on raw reads
-    FASTQC_RAW(reads)
+    FASTQC(reads)
 
     // trim FASTQs using TrimGalore
     trimmed_reads = TRIM(reads)
@@ -144,9 +141,4 @@ workflow DATA_PROCESSING {
     completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
 
     MULTIQC(completion_signal)
-
-    // define outputs mainly for testing
-    emit:
-    multiqc_html = MULTIQC.out.multiqc_html
-    coverage_stats = CALC_COVERAGE.out.stats
 }

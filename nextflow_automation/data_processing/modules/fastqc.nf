@@ -1,5 +1,5 @@
 /* 
-fastqc_raw.nf module 
+fastqc.nf module 
 
 This module takes raw FASTQ files and obtains read quality metrics
 using FASTQC.
@@ -7,7 +7,7 @@ using FASTQC.
 FastQC version: v0.11.9
 */
 
-process FASTQC_RAW {
+process FASTQC {
     tag "${sample_id}_${lane}"
 
     input:
