@@ -1,0 +1,47 @@
+name: "Setup nf-test"
+description: "Install Nextflow, Java, nf-test"
+author: "e10m"
+inputs:
+  nextflow_version:
+    description: "The Nextflow version to download (if necessary) and use. Example: 21.10.3"
+    required: false
+    default: "24.10.5"
+  java-version:
+    description: "The Java version to download and use. Eg: 17"
+    required: false
+    default: "11"
+  java-distribution:
+    description: "The Java distribution to install as the required dependency of Nextflow. Passed to the underlying setup-java action."
+    required: false
+    default: "temurin"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: ${{ inputs.java-distribution }}
+
+    - name: Install Nextflow
+      uses: nf-core/setup-nextflow@v2
+      with:
+        version: ${{ inputs.nextflow_version }}
+
+    - name: Install miniconda
+      uses: conda-incubator/setup-miniconda@v3
+      with:
+        auto-update-conda: true
+        auto-update-base: true
+        channels: bioconda, conda-forge, defaults
+
+    - name: Install nf-test
+      shell: bash -el {0}
+      run: |
+        conda install -y bioconda::nf-test
+        nf-test version
+        
+branding:
+  icon: "shuffle"
+  color: "green"
