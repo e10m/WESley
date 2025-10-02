@@ -7,16 +7,22 @@ jobs:
     strategy:
       matrix:
         include:
-          - test: tests/modules/trim_adapters.nf.test
+          - name: Trim-Galore
+            test: tests/modules/trim_adapters.nf.test
             image: quay.io/biocontainers/trim-galore:0.6.6--0
-          - test: tests/modules/fastqc.nf.test
+          - name: FastQC
+            test: tests/modules/fastqc.nf.test
             image: biocontainers/fastqc:v0.11.9_cv8
-          - test: tests/modules/align.nf.test
+          - name: bwa-mem
+            test: tests/modules/align.nf.test
             image: e10m/bwa-and-samtools:latest
+          - name: MarkDuplicates
+            test: tests/modules/mark_duplicates.nf.test
+            image: broadinstitute/gatk:4.2.0.0
     
     runs-on: ubuntu-latest
 
-    name: Test ${{ matrix.test }}
+    name: Test ${{ matrix.name }}
 
     steps:
       - uses: actions/checkout@v4

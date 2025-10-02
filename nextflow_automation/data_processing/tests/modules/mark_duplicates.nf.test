@@ -1,0 +1,50 @@
+nextflow_process {
+
+    name "Test Process MARK_DUPES"
+    script "modules/mark_duplicates.nf"
+    process "MARK_DUPES"
+
+    test("Should mark the duplicates without failures") {
+
+        when {
+            params {
+                // creating parameter for easy access to test data
+                test_data = "${projectDir}/test-data/bams"
+                ref_dir = "${projectDir}/test-data/references"
+                test_mode = true
+            }
+            process {
+                """
+                input[0] = [
+                    'test',
+                    [ 
+                        file("${params.test_data}/test.paired_end.sorted.bam", checkIfExists: true), 
+                        file("${params.test_data}/test2.paired_end.sorted.bam", checkIfExists: true)
+                    ]
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            println("\n* Duplicates marked successfully")
+
+            with(process.out.mark_dupe_bams) {  // ← Removed space between 'with' and '('
+                def outputs = get(0)  // directly access output tuple
+
+                assert outputs.size() == 4
+                println("\n* 4 items in output tuple")
+
+                def (sample_id, bam, bai, sbi) = outputs  // ← Changed '==' to '='
+
+                assert path(bam.toString()).exists()  // ← Added .toString()
+                assert path(bai.toString()).exists()
+                assert path(sbi.toString()).exists()
+                println("\n* All files found and exist")
+            }
+        }
+
+    }
+
+}

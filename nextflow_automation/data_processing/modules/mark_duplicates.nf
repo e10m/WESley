@@ -22,10 +22,10 @@ process MARK_DUPES {
 
     script:
     """
-    mkdir -p /base_dir/tmp
-
     # run Spark version in production environment
     if [ "${params.test_mode}" = "false" ]; then
+        mkdir -p /base_dir/tmp  # creating directory for spark to store temp files
+
         gatk MarkDuplicatesSpark \\
             ${sorted_bams.collect { "-I ${it}" }.join(" ")} \\
             -O ${sample_id}.MarkDuplicate.bam \\
@@ -45,7 +45,7 @@ process MARK_DUPES {
         # rename the .bai file to .bam.bai
         mv *.bai "${sample_id}.MarkDuplicate.bam.bai"
 
-        # artificially make sbi file since MarkDuplicates doesn't 
+        # artificially make sbi file generate sbi file
         touch "${sample_id}.MarkDuplicate.bam.sbi"
     fi
     """
