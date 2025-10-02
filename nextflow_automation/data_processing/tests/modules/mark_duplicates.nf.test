@@ -12,6 +12,7 @@ nextflow_process {
                 test_data = "${projectDir}/test-data/bams"
                 ref_dir = "${projectDir}/test-data/references"
                 test_mode = true
+                cpus = 1
             }
             process {
                 """
