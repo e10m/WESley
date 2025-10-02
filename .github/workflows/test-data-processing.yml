@@ -3,29 +3,31 @@ name: Data Processing Unit Tests
 on: [push, pull_request]
 
 jobs:
-  test_data_processing:  # ← Added colon
+  test_data_processing:
     strategy:
       matrix:
         include:
           - test: tests/modules/trim_adapters.nf.test
-            container: quay.io/biocontainers/trim-galore:0.6.6--0  # ← Fixed indentation
+            image: quay.io/biocontainers/trim-galore:0.6.6--0
           - test: tests/modules/fastqc.nf.test
-            container: biocontainers/fastqc:v0.11.9_cv8  # ← Fixed indentation
+            image: quay.io/biocontainers/fastqc:v0.11.9_cv8
           - test: tests/modules/align.nf.test
-            container: e10m/bwa-and-samtools:latest  # ← Fixed indentation
+            image: e10m/bwa-and-samtools:latest
     
     runs-on: ubuntu-latest
+
+    name: Test ${{ matrix.test }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup nf-test
-        uses: ./.github/actions/setup-nf-test  # ← Fixed path (removed extra dot)
+        uses: ./.github/actions/setup-nf-test
 
-      - name: Pull respective Docker container
-        run: docker pull ${{ matrix.container }}
+      - name: Pull respective Docker image
+        run: docker pull ${{ matrix.image }}
 
       - name: Run nf-test
         shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing  # ← Optional: removed trailing slash
+        working-directory: ./nextflow_automation/data_processing
         run: nf-test test ${{ matrix.test }}
