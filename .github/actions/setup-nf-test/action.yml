@@ -5,7 +5,7 @@ inputs:
   nextflow_version:
     description: "The Nextflow version to download (if necessary) and use. Example: 21.10.3"
     required: false
-    default: "24.10.5"
+    default: "25.04.6"
   java-version:
     description: "The Java version to download and use. Eg: 17"
     required: false

@@ -21,7 +21,7 @@ jobs:
       - name: Setup Nextflow
         uses: nf-core/setup-nextflow@v2
         with:
-          version: '24.10.5'
+          version: '25.04.6'
             
       - name: Run Nextflow linter on data processing
         working-directory: ./nextflow_automation/data_processing
