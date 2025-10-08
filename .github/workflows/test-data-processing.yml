@@ -19,6 +19,12 @@ jobs:
           - name: MarkDuplicates
             test: tests/modules/mark_duplicates.nf.test
             image: broadinstitute/gatk:4.2.0.0
+          - name: Set Tags
+            test: tests/modules/set_tags.nf.test
+            image: broadinstitute/gatk:4.2.0.0
+          - name: Create recalibrated bases table
+            test: tests/modules/recal_bases.nf.test
+            image: broadinstitute/gatk:4.2.0.0
     
     runs-on: ubuntu-latest
 
