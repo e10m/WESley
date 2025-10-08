@@ -23,9 +23,9 @@ jobs:
         with:
           version: '24.10.5'
             
-      - name: Run Nextflow linter on workflows
+      - name: Run Nextflow linter on data processing
         working-directory: ./nextflow_automation/data_processing
         run: |
             nextflow lint . \
             -exclude nf-test.config \
-            -exclude tests/nextflow.config
+            -exclude tests/data-processing-tests.config
