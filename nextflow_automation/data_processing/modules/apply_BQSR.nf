@@ -17,7 +17,7 @@ process APPLY_BQSR {
     tuple val(sample_id), path(tagged_bam), path(recal_data_table)
     
     output:
-    tuple val(sample_id), path("${sample_id}.BQSR.bam"), path("${sample_id}.BQSR.bam.bai"), path("${sample_id}.BQSR.bam.sbi"), emit: final_bams
+    tuple val(sample_id), path("${sample_id}*bam"), path("${sample_id}*bai"), emit: bqsr_bams
 
     script:
     """
@@ -31,8 +31,8 @@ process APPLY_BQSR {
         gatk ApplyBQSR \\
             -I ${tagged_bam} \\
             --bqsr-recal-file ${recal_data_table} \\
-            -O ${sample_id}.BQSR.bam \\
-            --create-output-bam-index true
+            --create-output-bam-index true \\
+            -O ${sample_id}.BQSR.bam
     fi
     """
 }

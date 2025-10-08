@@ -16,7 +16,7 @@ nextflow_process {
             process {
                 """
                 input[0] = [
-                    '1234N',
+                    'dummy',
                     file("${params.test_data}/dummy_L001.sorted.bam", checkIfExists: true),
                     file("${params.test_data}/dummy_L001.sorted.bam.bai", checkIfExists: true)
                 ]
@@ -34,7 +34,7 @@ nextflow_process {
                 assert get(0).size() == 3
                 println("\n* 3 items in output tuple")
 
-                assert sample_id == '1234N'
+                assert sample_id == 'dummy'
                 println("\n* Sample ID is outputted correctly")
 
                 assert path(bam.toString()).exists()

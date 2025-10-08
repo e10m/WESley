@@ -7,24 +7,27 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Trim-Galore
+          - name: TRIM
             test: tests/modules/trim_adapters.nf.test
             image: quay.io/biocontainers/trim-galore:0.6.6--0
-          - name: FastQC
+          - name: FASTQC
             test: tests/modules/fastqc.nf.test
             image: biocontainers/fastqc:v0.11.9_cv8
-          - name: bwa-mem
+          - name: BWA_ALIGN
             test: tests/modules/align.nf.test
             image: e10m/bwa-and-samtools:latest
-          - name: MarkDuplicates
+          - name: MARK_DUPES
             test: tests/modules/mark_duplicates.nf.test
             image: broadinstitute/gatk:4.2.0.0
-          - name: Set Tags
+          - name: SET_TAGS
             test: tests/modules/set_tags.nf.test
             image: broadinstitute/gatk:4.2.0.0
-          - name: Create recalibrated bases table
+          - name: RECAL_BASES
             test: tests/modules/recal_bases.nf.test
             image: broadinstitute/gatk:4.2.0.0
+          - name: APPLY_BQSR
+            test: tests/modules/apply_BQSR.nf.test
+            image: broadinstitue/gatk:4.2.0.0
     
     runs-on: ubuntu-latest
 
