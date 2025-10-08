@@ -27,7 +27,7 @@ jobs:
             image: broadinstitute/gatk:4.2.0.0
           - name: APPLY_BQSR
             test: tests/modules/apply_BQSR.nf.test
-            image: broadinstitue/gatk:4.2.0.0
+            image: broadinstitute/gatk:4.2.0.0
     
     runs-on: ubuntu-latest
 
