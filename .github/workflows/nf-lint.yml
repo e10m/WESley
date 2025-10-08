@@ -15,8 +15,8 @@ jobs:
       - name: Install Java
         uses: actions/setup-java@v4
         with:
-            distribution: 'temurin'
-            java-version: '11'
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Setup Nextflow
         uses: nf-core/setup-nextflow@v2
@@ -26,6 +26,6 @@ jobs:
       - name: Run Nextflow linter on data processing
         working-directory: ./nextflow_automation/data_processing
         run: |
-            nextflow lint . \
+          nextflow lint . \
             -exclude nf-test.config \
             -exclude tests/data-processing-tests.config
