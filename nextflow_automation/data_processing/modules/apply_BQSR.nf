@@ -17,13 +17,22 @@ process APPLY_BQSR {
     tuple val(sample_id), path(tagged_bam), path(recal_data_table)
     
     output:
-    tuple val(sample_id), path("${sample_id}.BQSR.bam"), path("${sample_id}.BQSR.bam.bai"), path("${sample_id}.BQSR.bam.sbi")
+    tuple val(sample_id), path("${sample_id}*bam"), path("${sample_id}*bai"), emit: bqsr_bams
 
     script:
     """
-    gatk ApplyBQSRSpark -I $tagged_bam \\
-    --bqsr-recal-file $recal_data_table \\
-    -O "${sample_id}.BQSR.bam" \\
-    --conf "spark.executor.cores=${task.cpus}"
+    # run Spark version of ApplyBQSR based on production vs. testing environments
+    if [ "${params.test_mode}" = "false" ]; then 
+        gatk ApplyBQSRSpark -I $tagged_bam \\
+            --bqsr-recal-file $recal_data_table \\
+            -O "${sample_id}.BQSR.bam" \\
+            --conf "spark.executor.cores=${task.cpus}"
+    else
+        gatk ApplyBQSR \\
+            -I ${tagged_bam} \\
+            --bqsr-recal-file ${recal_data_table} \\
+            --create-output-bam-index true \\
+            -O ${sample_id}.BQSR.bam
+    fi
     """
 }

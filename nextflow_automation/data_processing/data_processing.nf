@@ -8,12 +8,12 @@ include { MARK_DUPES } from './modules/mark_duplicates.nf'
 include { SET_TAGS } from './modules/set_tags.nf'
 include { RECAL_BASES } from './modules/recal_bases.nf'
 include { APPLY_BQSR } from './modules/apply_BQSR.nf'
-include { FASTQC_RAW } from './modules/fastqc_raw.nf'
+include { FASTQC } from './modules/fastqc.nf'
 include { MULTIQC } from './modules/multiqc.nf'
 include { CALC_COVERAGE } from './modules/calc_coverage.nf'
 
 // main workflow
-workflow {
+workflow DATA_PROCESSING {
     // Show help message if requested
     if (params.help) {
         help = """Usage:
@@ -72,7 +72,7 @@ workflow {
     ////////////////////////////
     // Start of main workflow //
     ////////////////////////////
-    
+
     // channel in metadata and save as a set for downstream processes
     Channel
         .fromPath(params.metadata)
@@ -90,7 +90,7 @@ workflow {
         .set { reads }
 
     // run FASTQC on raw reads
-    FASTQC_RAW(reads)
+    FASTQC(reads)
 
     // trim FASTQs using TrimGalore
     trimmed_reads = TRIM(reads)

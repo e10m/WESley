@@ -1,0 +1,63 @@
+nextflow_process {
+
+    name "Test Process FASTQC"
+    script "modules/fastqc.nf"
+    process "FASTQC"
+    config "../data-processing-tests.config"
+
+    test("Should run FASTQC checks without failures") {
+        when {
+            params {
+                // creating parameter for easy access to test data
+                test_data = "${projectDir}/test-data/fastqs"
+                ref_dir = "${projectDir}/test-data/references"
+            }
+            
+            process {
+                // required inputs for test data
+                """
+                input[0] = [
+                    'dummy',
+                    'L001',
+                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    'illumina_novaseq_x',
+                    'tcgb',
+                    false
+                ]
+                """
+            }
+        }
+
+        then {
+            // check the process succeeded without error messages
+            assert process.success
+
+            // check outputs
+            with(process.out.fastqc_files) {
+                def files = get(0)  // directly access the first emission
+                assert files.size() == 2  // verify tuple size of 2
+
+                def html_files = files[0]
+                def zip_files = files[1]
+                
+                // check if 2 types of each file
+                assert html_files.size() == 2
+                assert zip_files.size() == 2
+
+                println("\n\n* Both .html files and .zip files found in array")
+
+                // verify all files exist
+                html_files.each { file ->
+                    assert path(file).exists()
+                }
+
+                zip_files.each { file ->
+                    assert path(file).exists()
+                }
+
+                println("\n* All files exist")
+            }
+        }
+    }
+}

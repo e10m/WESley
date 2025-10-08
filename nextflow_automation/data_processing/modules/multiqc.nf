@@ -15,8 +15,8 @@ process MULTIQC {
     val "ready"
 
     output:
-    path("multiqc_report.html")
-    path("multiqc*/*")
+    path("multiqc_report.html"), emit: multiqc_html
+    path("multiqc*/*"), emit: multiqc_files
 
     script:
     """

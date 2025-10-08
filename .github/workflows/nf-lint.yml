@@ -1,9 +1,6 @@
 name: Nextflow Linter
 
 on:
-  push:
-    branches: 
-      - main
   pull_request:
     branches:
       - main
@@ -15,14 +12,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Pull Docker image
-        run: |
-          docker pull nextflow/nextflow:25.04.6
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Setup Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: '25.04.6'
             
-      - name: Run Nextflow linter on workflows
-        working-directory: ./nextflow_automation
+      - name: Run Nextflow linter on data processing
+        working-directory: ./nextflow_automation/data_processing
         run: |
-          # lint all nextflow files; ignore nf-test files
-          docker run --rm -v $(pwd):/github -w /github nextflow/nextflow:25.04.6 nextflow lint . \
-            -exclude data_processing/nf-test.config \
-            -exclude data_processing/tests/nextflow.config
+          nextflow lint . \
+            -exclude nf-test.config \
+            -exclude tests/data-processing-tests.config

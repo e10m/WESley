@@ -142,7 +142,7 @@ nextflow run cnvkit.nf \
 #### General
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
-| Nextflow        | 24.10.5  | Workflow management |
+| Nextflow        | 25.04.6  | Workflow management |
 | Docker          | 18.09.7  | Containerization |
 | Python          | 3.6.10   | Scripting and automation |
 | R               | 4.3.1    | Statistical analysis |

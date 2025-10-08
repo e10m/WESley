@@ -1,20 +1,19 @@
 nextflow_process {
-    name "Test Process BWA_ALIGN"
-    tag "alignment-test"
-    script "modules/align.nf"
-    process "BWA_ALIGN"
+
+    name "Test Process TRIM"
+    script "modules/trim_adapters.nf"
+    process "TRIM"
     config "../data-processing-tests.config"
 
-    test("Should align via bwa-mem without failures") {
+    test("Should trim FASTQs without failures") {
+
         when {
             params {
                 // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/fastqs"
                 ref_dir = "${projectDir}/test-data/references"
             }
-
             process {
-                // required inputs for test data
                 """
                 input[0] = [
                     'dummy',
@@ -32,20 +31,20 @@ nextflow_process {
         then {
             // check the process succeeded without error messages
             assert process.success
-            println("\n* The alignment via bwa-mem succeeded")
 
-            with(process.out.temp_bams) {
-                def output_tuple = get(0)  // access first emission
+            // check outputs
+            with(process.out.trimmed_fastqs) {
+                def output_tuple = get(0)  // directly access the first emission
+                assert output_tuple.size() == 7  // verify tuple size of 7
+                
+                def (sample_id, lane, fastq_1, fastq_2, platform, seq_center, mouse_flag) = output_tuple
+                
+                // verify files exist
+                assert path(fastq_1).exists()
+                assert file(fastq_1).name == 'dummy_L001_val_1.fq.gz'
 
-                assert output_tuple.size() == 2
-                println("\n* 2 outputs correctly detected")
-
-                assert output_tuple[0] == 'dummy'
-                println("\n* Correct sample id output")
-
-                assert file(output_tuple[1]).name == 'dummy_L001.sorted.bam'
-                assert file(output_tuple[1]).exists()
-                println("\n* Correctly named output file exists")
+                assert path(fastq_2).exists()
+                assert file(fastq_2).name == 'dummy_L001_val_2.fq.gz'
             }
         }
     }
