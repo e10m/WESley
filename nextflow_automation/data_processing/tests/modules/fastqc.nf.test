@@ -3,15 +3,14 @@ nextflow_process {
     name "Test Process FASTQC"
     script "modules/fastqc.nf"
     process "FASTQC"
+    config "../data-processing-tests.config"
 
     test("Should run FASTQC checks without failures") {
         when {
             params {
                 // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/fastqs"
-                cpus = 1
                 ref_dir = "${projectDir}/test-data/references"
-                test_mode = true
             }
             
             process {

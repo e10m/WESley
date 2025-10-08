@@ -12,10 +12,10 @@ process SET_TAGS {
     cpus 1
 
     input:
-    tuple val(sample_id), path(marked_bam), path(index), path(sliced_index)
+    tuple val(sample_id), path(marked_bam), path(index)
     
     output:
-    tuple val(sample_id), path("${sample_id}.tagged.bam"), path("${sample_id}.tagged.bai")
+    tuple val(sample_id), path("${sample_id}.tagged.bam"), path("${sample_id}.tagged.bai"), emit: tagged_bams
 
     script:
     """

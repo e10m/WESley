@@ -18,7 +18,7 @@ process MARK_DUPES {
     tuple val(sample_id), path(sorted_bams)
     
     output:
-    tuple val(sample_id), path("${sample_id}.MarkDuplicate.bam"), path("${sample_id}.MarkDuplicate.bam.bai"), path("${sample_id}.MarkDuplicate.bam.sbi"), emit: mark_dupe_bams
+    tuple val(sample_id), path("${sample_id}.MarkDuplicate.bam"), path("${sample_id}.MarkDuplicate.bam.bai"), emit: mark_dupe_bams
 
     script:
     """

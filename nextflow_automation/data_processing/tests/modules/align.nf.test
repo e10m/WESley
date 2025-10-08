@@ -3,15 +3,14 @@ nextflow_process {
     tag "alignment-test"
     script "modules/align.nf"
     process "BWA_ALIGN"
+    config "../data-processing-tests.config"
 
     test("Should align via bwa-mem without failures") {
         when {
             params {
                 // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/fastqs"
-                cpus = 1
                 ref_dir = "${projectDir}/test-data/references"
-                test_mode = true
             }
 
             process {

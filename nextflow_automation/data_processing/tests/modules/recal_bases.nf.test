@@ -1,0 +1,46 @@
+nextflow_process {
+
+    name "Test Process RECAL_BASES"
+    script "modules/recal_bases.nf"
+    process "RECAL_BASES"
+    config "../data-processing-tests.config"
+
+    test("Should generate recalibration table without failures") {
+
+        when {
+            params {
+                test_data = "${projectDir}/test-data/bams/chr20"
+                ref_dir = "${projectDir}/test-data/references"
+            }
+
+            process {
+                """
+                input[0] = [
+                    '1234N',
+                    file("${params.test_data}/dummy_L001.sorted.bam", checkIfExists: true),
+                    file("${params.test_data}/dummy_L001.sorted.bam.bai", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            println("\n* Process completed successfully; recalibration table generated")
+
+            with(process.out.recal_table) {
+                def (sample_id, bam, table) = get(0)
+
+                assert get(0).size() == 3
+                println("\n* 3 items in output tuple")
+
+                assert sample_id == '1234N'
+                println("\n* Sample ID is outputted correctly")
+
+                assert path(bam.toString()).exists()
+                assert path(table.toString()).exists()
+                println("\n* All files found and exist")
+            }
+        }
+    }
+}

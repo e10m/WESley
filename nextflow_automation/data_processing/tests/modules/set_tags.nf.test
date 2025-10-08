@@ -1,15 +1,14 @@
 nextflow_process {
 
-    name "Test Process MARK_DUPES"
-    script "modules/mark_duplicates.nf"
-    process "MARK_DUPES"
+    name "Test Process SET_TAGS"
+    script "modules/set_tags.nf"
+    process "SET_TAGS"
     config "../data-processing-tests.config"
 
-    test("Should mark the duplicates without failures") {
+    test("Should add the metadata tags to BAM without failures") {
 
         when {
             params {
-                // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/bams/chr22"
                 ref_dir = "${projectDir}/test-data/references"
             }
@@ -17,10 +16,8 @@ nextflow_process {
                 """
                 input[0] = [
                     'test',
-                    [ 
-                        file("${params.test_data}/test.paired_end.sorted.bam", checkIfExists: true), 
-                        file("${params.test_data}/test2.paired_end.sorted.bam", checkIfExists: true)
-                    ]
+                    file("${params.test_data}/test.paired_end.sorted.bam", checkIfExists: true),
+                    file("${params.test_data}/test.paired_end.sorted.bam.bai", checkIfExists: true)
                 ]
                 """
             }
@@ -28,15 +25,13 @@ nextflow_process {
 
         then {
             assert process.success
-            println("\n* Duplicates marked successfully")
+            println("\n* Process completed successfully; metadata tags added to BAM")
 
-            with(process.out.mark_dupe_bams) {
-                def outputs = get(0)  // directly access output tuple
+            with(process.out.tagged_bams) {
+                def (sample_id, bam, bai) = get(0)
 
-                assert outputs.size() == 3
+                assert get(0).size() == 3
                 println("\n* 3 items in output tuple")
-
-                def (sample_id, bam, bai) = outputs
 
                 assert sample_id == 'test'
                 println("\n* Sample ID is outputted correctly")
@@ -44,11 +39,7 @@ nextflow_process {
                 assert path(bam.toString()).exists()
                 assert path(bai.toString()).exists()
                 println("\n* All files found and exist")
-
-                
             }
         }
-
     }
-
 }

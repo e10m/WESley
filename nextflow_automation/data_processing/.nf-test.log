@@ -1,14 +1,14 @@
-Oct-02 15:34:17.792 [main] INFO  com.askimed.nf.test.App - nf-test 0.9.3
-Oct-02 15:34:17.884 [main] INFO  com.askimed.nf.test.App - Arguments: [test, tests/modules/mark_duplicates.nf.test]
-Oct-02 15:34:22.153 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 24.10.5
-Oct-02 15:34:22.155 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /home/zhuhenan/github/WESley/nextflow_automation/data_processing/nf-test.config...
-Oct-02 15:34:23.760 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Loaded 15 files from directory /home/zhuhenan/github/WESley/nextflow_automation/data_processing in 0.134 sec
-Oct-02 15:34:23.773 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Found 1 files containing tests.
-Oct-02 15:34:23.774 [main] DEBUG com.askimed.nf.test.lang.dependencies.DependencyResolver - Found files: [/home/zhuhenan/github/WESley/nextflow_automation/data_processing/tests/modules/mark_duplicates.nf.test]
-Oct-02 15:34:24.793 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Found 1 tests to execute.
-Oct-02 15:34:24.796 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Started test plan
-Oct-02 15:34:24.796 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'Test Process MARK_DUPES' from file '/home/zhuhenan/github/WESley/nextflow_automation/data_processing/tests/modules/mark_duplicates.nf.test'.
-Oct-02 15:34:24.797 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '94ffa15d: Should mark the duplicates without failures'. type: com.askimed.nf.test.lang.process.ProcessTest
-Oct-02 15:35:01.703 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '94ffa15d: Should mark the duplicates without failures' finished. status: PASSED
-Oct-02 15:35:01.724 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'Test Process MARK_DUPES' finished. snapshot file: false, skipped tests: false, failed tests: false
-Oct-02 15:35:01.725 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Executed 1 tests. 0 tests failed. Done!
+Oct-08 12:51:37.022 [main] INFO  com.askimed.nf.test.App - nf-test 0.9.3
+Oct-08 12:51:37.044 [main] INFO  com.askimed.nf.test.App - Arguments: [test, tests/modules/recal_bases.nf.test]
+Oct-08 12:51:38.162 [main] INFO  com.askimed.nf.test.App - Nextflow Version: 24.10.5
+Oct-08 12:51:38.164 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Load config from file /home/zhuhenan/github/WESley/nextflow_automation/data_processing/nf-test.config...
+Oct-08 12:51:38.752 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Loaded 17 files from directory /home/zhuhenan/github/WESley/nextflow_automation/data_processing in 0.042 sec
+Oct-08 12:51:38.754 [main] INFO  com.askimed.nf.test.lang.dependencies.DependencyResolver - Found 1 files containing tests.
+Oct-08 12:51:38.754 [main] DEBUG com.askimed.nf.test.lang.dependencies.DependencyResolver - Found files: [/home/zhuhenan/github/WESley/nextflow_automation/data_processing/tests/modules/recal_bases.nf.test]
+Oct-08 12:51:39.090 [main] INFO  com.askimed.nf.test.commands.RunTestsCommand - Found 1 tests to execute.
+Oct-08 12:51:39.091 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Started test plan
+Oct-08 12:51:39.091 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Running testsuite 'Test Process RECAL_BASES' from file '/home/zhuhenan/github/WESley/nextflow_automation/data_processing/tests/modules/recal_bases.nf.test'.
+Oct-08 12:51:39.091 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Run test '19c1ddbe: Should generate recalibration table without failures'. type: com.askimed.nf.test.lang.process.ProcessTest
+Oct-08 12:51:48.369 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Test '19c1ddbe: Should generate recalibration table without failures' finished. status: PASSED
+Oct-08 12:51:48.372 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Testsuite 'Test Process RECAL_BASES' finished. snapshot file: false, skipped tests: false, failed tests: false
+Oct-08 12:51:48.372 [main] INFO  com.askimed.nf.test.core.TestExecutionEngine - Executed 1 tests. 0 tests failed. Done!

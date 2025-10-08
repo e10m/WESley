@@ -3,6 +3,7 @@ nextflow_process {
     name "Test Process TRIM"
     script "modules/trim_adapters.nf"
     process "TRIM"
+    config "../data-processing-tests.config"
 
     test("Should trim FASTQs without failures") {
 
@@ -11,7 +12,6 @@ nextflow_process {
                 // creating parameter for easy access to test data
                 test_data = "${projectDir}/test-data/fastqs"
                 ref_dir = "${projectDir}/test-data/references"
-                test_mode = true
             }
             process {
                 """
