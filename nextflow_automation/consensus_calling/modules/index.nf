@@ -9,6 +9,7 @@ samtools version: 1.10.
 process INDEX {
     tag "${sample_id}"
     cpus 1
+    publishDir "${params.base_dir}/mutation_calls/consensus/raw-vcfs", mode: 'copy', pattern: "*vcf*"
     
     input:
     tuple val(sample_id), path(mutect2_vcf), path(muse_vcf), path(varscan2_vcf)
