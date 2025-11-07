@@ -82,7 +82,7 @@ workflow {
 
     // channel in the bams and reference directory as individual tuples
     Channel
-    .fromPath("${params.base_dir}/**/*BQSR.bam")
+    .fromPath("${params.base_dir}/**/*.bam")
     .map { bam ->
         tuple(bam, params.ref_dir)
     }
