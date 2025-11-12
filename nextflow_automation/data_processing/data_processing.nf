@@ -26,6 +26,7 @@ workflow DATA_PROCESSING {
         --base_dir                    Path to the base directory containing input data
         --ref_dir                     Path to the reference directory
         --metadata                    Path to metadata file
+        --batch_name                  Name of the batch for output organization
 
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
@@ -55,6 +56,11 @@ workflow DATA_PROCESSING {
 
     if (!params.metadata) {
         error "ERROR: --metadata parameter is required"
+        exit 1
+    }
+
+    if (!params.batch_name) {
+        error "ERROR: --batch_name parameter is required"
         exit 1
     }
 

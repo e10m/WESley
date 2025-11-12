@@ -8,7 +8,7 @@ MultiQC version: v1.30.
 */
 
 process MULTIQC {
-    publishDir "${params.base_dir}/QC", mode: 'copy'
+    publishDir "${params.base_dir}/QC-${params.batch_name}", mode: 'copy'
     containerOptions "-v ${workflow.workDir}:/work"
 
     input:
