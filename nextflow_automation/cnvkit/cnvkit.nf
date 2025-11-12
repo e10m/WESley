@@ -25,7 +25,8 @@ workflow {
         nextflow -C <CONFIG_PATH> run cnvkit.nf --base_dir <PATH> --ref_dir <PATH> --batch_number <INT> [OPTIONS]
         
         Required arguments:
-        --base_dir                    Path to the base directory containing input data
+        --bam_dir                     Path to the directory containing input BAM files
+        --output_dir                  Path to the output directory
         --ref_dir                     Path to the reference directory
         --batch_number                The batch number being processed (eg: 20)
         
@@ -45,8 +46,13 @@ workflow {
     }
 
     // Parameter validation
-    if (!params.base_dir) {
+    if (!params.bam_dir) {
         error "ERROR: --base_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.output_dir) {
+        error "ERROR: --output_dir parameter is required"
         exit 1
     }
 
@@ -55,15 +61,20 @@ workflow {
         exit 1
     }
     
-    if (!params.batch_number) {
-        error "ERROR: --batch_number parameter is required"
+    if (!params.batch_name) {
+        error "ERROR: --batch_name parameter is required"
         exit 1
     }
 
     // workflow logging
-    log.info """/
-    ${workflow.manifest.name ?: 'Unknown'}
-    ===================================================
+    log.info """\
+ __     __     ______     ______     __         ______     __  __    
+/\\ \\  _ \\ \\   /\\  ___\\   /\\  ___\\   /\\ \\       /\\  ___\\   /\\ \\_\\ \\   
+\\ \\ \\/ ".\\ \\  \\ \\  __\\   \\ \\___  \\  \\ \\ \\____  \\ \\  __\\   \\ \\____ \\  
+ \\ \\__/".~\\_\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\ 
+  \\/_/   \\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_____/
+=========================================================================================
+    Workflow ran:       : ${workflow.manifest.name}
     Command ran         : ${workflow.commandLine}
     Started on          : ${workflow.start}
     Config File used    : ${workflow.configFiles ?: 'None specified'}
@@ -77,7 +88,7 @@ workflow {
 
     // channel in the bams and reference directory as individual tuples
     Channel
-    .fromPath("${params.base_dir}/**/*BQSR.bam")
+    .fromPath("${params.bam_dir}/**/*.bam")
     .map { bam ->
         tuple(bam, params.ref_dir)
     }

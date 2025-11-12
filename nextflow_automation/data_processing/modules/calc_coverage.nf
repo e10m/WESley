@@ -12,7 +12,7 @@ process CALC_COVERAGE {
     cpus 1
 
     input:
-    tuple val(sample_id), path(bam), path(bai), path(sbi)
+    tuple val(sample_id), path(bam), path(bai)
     
     output:
     path("${sample_id}.hs_metrics.txt"), emit: stats

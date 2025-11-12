@@ -26,6 +26,7 @@ workflow DATA_PROCESSING {
         --base_dir                    Path to the base directory containing input data
         --ref_dir                     Path to the reference directory
         --metadata                    Path to metadata file
+        --batch_name                  Name of the batch for output organization
 
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
@@ -58,10 +59,20 @@ workflow DATA_PROCESSING {
         exit 1
     }
 
+    if (!params.batch_name) {
+        error "ERROR: --batch_name parameter is required"
+        exit 1
+    }
+
     // workflow logging
-    log.info """/
-    ${workflow.manifest.name ?: 'Unknown'}
-    ===================================================
+    log.info """\
+ __     __     ______     ______     __         ______     __  __    
+/\\ \\  _ \\ \\   /\\  ___\\   /\\  ___\\   /\\ \\       /\\  ___\\   /\\ \\_\\ \\   
+\\ \\ \\/ ".\\ \\  \\ \\  __\\   \\ \\___  \\  \\ \\ \\____  \\ \\  __\\   \\ \\____ \\  
+ \\ \\__/".~\\_\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\ 
+  \\/_/   \\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_____/
+=========================================================================================
+    Workflow ran:       : ${workflow.manifest.name}
     Command ran         : ${workflow.commandLine}
     Started on          : ${workflow.start}
     Config File used    : ${workflow.configFiles ?: 'None specified'}
