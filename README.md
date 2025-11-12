@@ -119,18 +119,20 @@ nextflow run mutation_calling.nf --with-docker -with-trace \
 ```bash
 nextflow run cnvkit.nf \
 --with-docker -with-trace \
---base_dir /path/to/batch20/ \
+--bam_dir /path/to/batch20-bams/ \
+--output_dir /path/to/batch20-outputs/ \
 --ref_dir /references \
---batch_number 20
+--batch_name 20
 ```
 
 **Script Parameters:**
 | Flag             | Description |
 |------------------|-------------|
-| --base_dir       | Base Directory of the BAM Files |
-| --batch_number   | Batch number |
+| --bam_dir        | BAM file directory |
+| --output_dir     | Directory to publish outputs |
+| --batch_name     | Batch name for output renaming |
 | --ref_dir        | Path to the references folder |
-| --cpus           | Number of CPUs to allocate |
+| --cpus           | Number of CPUs to allocate (Default: 1) |
 
 ## How To Run (Consensus Calling)
 ```bash
