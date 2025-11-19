@@ -94,7 +94,11 @@ workflow {
 
     // channel in the bams as individual tuples, then combine into a list of BAMs
     Channel
-        .fromPath("${params.bam_dir}/**/*.bam")  // channel in bams individually
+        // channel in bams individually
+        .fromPath([
+                "${params.bam_dir}/*.bam",      // top level directory
+                "${params.bam_dir}/**/*.bam"    // subdirectories
+            ])
         .collect()  // collect individual bams into a list
         .set { bam_list }  // define data structure name
 
