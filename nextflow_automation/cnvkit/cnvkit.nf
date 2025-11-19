@@ -28,6 +28,7 @@ workflow {
         --bam_dir                     Path to the directory containing input BAM files
         --output_dir                  Path to the output directory
         --ref_dir                     Path to the reference directory
+        --pooled_normal               File name of the .cnn file (eg: pooled_normal.cnn)
         --batch_number                The batch number being processed (eg: 20)
         
         Optional arguments:
@@ -55,9 +56,14 @@ workflow {
         error "ERROR: --output_dir parameter is required"
         exit 1
     }
-
+    
     if (!params.ref_dir) {
         error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.pooled_normal) {
+        error "ERROR: --pooled_normal parameter is required"
         exit 1
     }
     
@@ -86,21 +92,14 @@ workflow {
     // Start of main workflow //
     ////////////////////////////
 
-    // channel in the bams and reference directory as individual tuples
+    // channel in the bams as individual tuples, then combine into a list of BAMs
     Channel
-    .fromPath("${params.bam_dir}/**/*.bam")
-    .map { bam ->
-        tuple(bam, params.ref_dir)
-    }
-    .set { bam_list }
-
-    // group the tuples by the references folder for nested bams list  
-    bams_with_ref_nested = bam_list.groupTuple(by: 1)
+        .fromPath("${params.bam_dir}/**/*.bam")  // channel in bams individually
+        .collect()  // collect individual bams into a list
+        .set { bam_list }  // define data structure name
 
     // run CNVKit batch 
-    cnr_list = BATCH(bams_with_ref_nested)
-
-    cnr_list.flatten().set{cnr_files}
+    cnr_files = BATCH(bam_list)
 
     // run CNVKit segment
     cns_files = SEGMENT(cnr_files)
@@ -108,13 +107,11 @@ workflow {
     // convert .cns files to .seg
     seg_files = EXPORT(cns_files)
 
-    // channel in batch number and combine with the seg_files for renaming
-    batch_number = Channel.value(params.batch_number)
-
-    seg_file_list_with_batch  = batch_number.combine(seg_files)
-
-    seg_file_list_with_batch_nested = seg_file_list_with_batch.groupTuple()
+    // collect the seg_files into a list
+    seg_files
+        .collect()
+        .set { seg_file_list }
 
     // merge all the .seg files
-    MERGE(seg_file_list_with_batch_nested)
+    MERGE(seg_file_list)
 }

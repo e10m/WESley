@@ -23,7 +23,6 @@ process SEGMENT {
     $cnr_file \
     -p ${params.cpus} \
     -t 0.0005 \
-    --drop-low-coverage \
     -o "${cnr_file.simpleName}_noDrop_t0005.cns"
     """
 }

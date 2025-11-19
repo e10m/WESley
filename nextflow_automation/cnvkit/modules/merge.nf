@@ -10,16 +10,17 @@ process MERGE {
     maxForks 1
 
     input:
-    tuple val(batch_number), path(seg_file_list)
+    path(input_*.seg)
     
     output:
-    path("merged_batch_${batch_number}.seg")
+    path("merged_${params.batch_name}.seg")
 
     script:
     """
-    echo -e "ID\tchrom\tloc.start\tloc.end\tnum.mark\tseg.mean" > merged_${batch_number}.seg
-    for f in ${seg_file_list}; do
-        tail -n +2 \$f >> "merged_batch_${batch_number}.seg"
-    done
+    # create the merged file and add header
+    echo -e "ID\tchrom\tloc.start\tloc.end\tnum.mark\tseg.mean" > merged_${params.batch_name}.seg
+    
+    # append all files, skipping headers
+    tail -n +2 -q input_*.seg >> merged_${params.batch_name}.seg
     """
 }
