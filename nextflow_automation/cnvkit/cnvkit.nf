@@ -103,7 +103,10 @@ workflow {
         .set { bam_list }  // define data structure name
 
     // run CNVKit batch 
-    cnr_files = BATCH(bam_list)
+    cnr_list = BATCH(bam_list)
+
+    // ungroup list of cnr files for individual processing
+    cnr_files = cnr_list.flatten()
 
     // run CNVKit segment
     cns_files = SEGMENT(cnr_files)

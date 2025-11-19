@@ -8,7 +8,7 @@ CNVKit version: 0.9.10.
 */
 
 process SEGMENT {
-    publishDir "${params.base_dir}/cnv_calling/raw_files", mode: 'copy'
+    publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy'
     cpus params.cpus
 
     input:

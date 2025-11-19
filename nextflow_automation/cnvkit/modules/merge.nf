@@ -5,7 +5,7 @@ This module merges all .seg files into a singular .seg file.
 */
 
 process MERGE {
-    publishDir "${params.base_dir}/cnv_calling/merged_seg_files", mode: 'copy'
+    publishDir "${params.output_dir}/cnv_calling/merged_seg_files", mode: 'copy'
     cpus 1
     maxForks 1
 

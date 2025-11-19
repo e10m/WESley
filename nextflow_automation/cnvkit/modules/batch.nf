@@ -8,7 +8,7 @@ CNVKit version: 0.9.10
 */
 
 process BATCH {
-    publishDir "${params.base_dir}/cnv_calling/raw_files", mode: 'copy', pattern: "*{.cnr, .cns, .call.cns}"
+    publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy', pattern: "*"
     cpus params.cpus
 
     input:
