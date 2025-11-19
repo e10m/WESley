@@ -8,7 +8,7 @@ CNVKit version: 0.9.10.
 */
 
 process SEGMENT {
-    publishDir "${params.base_dir}/cnv_calling/raw_files", mode: 'copy'
+    publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy'
     cpus params.cpus
 
     input:
@@ -23,7 +23,6 @@ process SEGMENT {
     $cnr_file \
     -p ${params.cpus} \
     -t 0.0005 \
-    --drop-low-coverage \
     -o "${cnr_file.simpleName}_noDrop_t0005.cns"
     """
 }

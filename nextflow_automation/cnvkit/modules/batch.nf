@@ -8,20 +8,23 @@ CNVKit version: 0.9.10
 */
 
 process BATCH {
-    publishDir "${params.base_dir}/cnv_calling/raw_files", mode: 'copy', pattern: "*.cnr"
-    publishDir "${params.base_dir}/cnv_calling/misc_files", mode: 'copy', pattern: "*{.cns,.call.cns}"
+    publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy', pattern: "*"
     cpus params.cpus
 
     input:
-    tuple path(bam_list), path(ref_dir)
+    path(bam_list)
     
     output:
     path("*.cnr")
 
     script:
     """
+    # locate the pooled normal file
+    POOLED_NORMAL=\$(find /references -name "${params.pooled_normal}" -type f | head -n 1)
+
+    # run the cnvkit batch pipeline
     cnvkit.py batch ${bam_list.join(' ')} \
-    -r "${ref_dir}/KAPA_HyperExome_hg38_capture_targets.reference.cnn" \
+    -r "\${POOLED_NORMAL}" \
     -p ${params.cpus}
     """
 }
