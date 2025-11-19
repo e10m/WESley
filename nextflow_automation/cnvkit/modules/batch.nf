@@ -19,8 +19,12 @@ process BATCH {
 
     script:
     """
+    # locate the pooled normal file
+    POOLED_NORMAL=\$(find /references -name "${params.pooled_normal}" -type f | head -n 1)
+
+    # run the cnvkit batch pipeline
     cnvkit.py batch ${bam_list.join(' ')} \
-    -r "/references/${params.pooled_normal}" \
+    -r "\${POOLED_NORMAL}" \
     -p ${params.cpus}
     """
 }
