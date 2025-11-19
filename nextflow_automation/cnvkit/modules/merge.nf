@@ -20,6 +20,6 @@ process MERGE {
     echo -e "ID\tchrom\tloc.start\tloc.end\tnum.mark\tseg.mean" > merged_${params.batch_name}.seg
     
     # append all files, skipping headers
-    find . -name "*.seg" -type f -exec tail -n +2 {} \\; >> merged_${params.batch_name}.seg
+    tail -n +2 -q ${seg_files} >> merged_${params.batch_name}.seg
     """
 }
