@@ -83,6 +83,11 @@ workflow DATA_PROCESSING {
     ////////////////////////////
     // Start of main workflow //
     ////////////////////////////
+    
+    // TODO: change the channeling to read in FASTQ pairs instead
+    
+
+    // TODO: write Python script to parse metadata
 
     // channel in metadata and save as a set for downstream processes
     Channel
