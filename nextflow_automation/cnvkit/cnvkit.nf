@@ -99,11 +99,14 @@ workflow {
                 "${params.bam_dir}/*.bam",      // top level directory
                 "${params.bam_dir}/**/*.bam"    // subdirectories
             ])
+        .filter { !~ /(PBMC|BLD|CD45|NORM|NORMAL|Blood)/ }  // filter out normal samples
         .collect()  // collect individual bams into a list
-        .set { bam_list }  // define data structure name
+        .set { tumor_bams }  // define data structure name
+
+    tumor_bams.view()
 
     // run CNVKit batch 
-    cnr_list = BATCH(bam_list)
+    cnr_list = BATCH(tumor_bams)
 
     // ungroup list of cnr files for individual processing
     cnr_files = cnr_list.flatten()
