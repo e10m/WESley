@@ -8,14 +8,15 @@ CNVKit version: 0.9.10.
 */
 
 process SEGMENT {
+    tag "$sample_id"
     publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy'
     cpus params.cpus
 
     input:
-    path(cnr_file)
+    tuple val(sample_id), path(cnr_file)
     
     output:
-    path("*_noDrop_t0005.cns")
+    tuple val(sample_id), path("*_noDrop_t0005.cns")
 
     script:
     """

@@ -12,7 +12,7 @@ process EXPORT {
     cpus 1
 
     input:
-    path(cns_file)
+    tuple val(sample_id), path(cns_file)
     
     output:
     path("*.seg")
