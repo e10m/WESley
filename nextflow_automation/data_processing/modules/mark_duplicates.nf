@@ -24,13 +24,13 @@ process MARK_DUPES {
     """
     # run Spark version in production environment
     if [ "${params.test_mode}" = "false" ]; then
-        mkdir -p /base_dir/tmp  # creating directory for spark to store temp files
+        mkdir -p /output_dir/tmp  # creating directory for spark to store temp files
 
         gatk MarkDuplicatesSpark \\
             ${sorted_bams.collect { "-I ${it}" }.join(" ")} \\
             -O ${sample_id}.MarkDuplicate.bam \\
             --conf "spark.executor.cores=${task.cpus}" \\
-            --conf "spark.local.dir=/base_dir/tmp"
+            --conf "spark.local.dir=/output_dir/tmp"
 
     # testing environment (no Spark authentication)
     else

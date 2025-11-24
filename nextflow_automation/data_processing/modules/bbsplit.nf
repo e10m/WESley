@@ -10,7 +10,7 @@ BBMap version: BBMap version 38.06
 
 process SPLIT {
     tag "${sample_id}_${lane}"
-    publishDir "${params.base_dir}/preprocessing/bbsplit", mode: 'copy', pattern: "*refstats.txt"
+    publishDir "${params.output_dir}/preprocessing/bbsplit", mode: 'copy', pattern: "*refstats.txt"
     cpus params.cpus
     
     input:
