@@ -8,6 +8,7 @@ CNVKit version: 0.9.10.
 */
 
 process EXPORT {
+    tag "$sample_id"
     publishDir "${params.output_dir}/cnv_calling/segmentation", mode: 'copy'
     cpus 1
 
