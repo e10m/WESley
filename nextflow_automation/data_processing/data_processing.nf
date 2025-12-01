@@ -11,7 +11,7 @@ include { APPLY_BQSR } from './modules/apply_BQSR.nf'
 include { FASTQC } from './modules/fastqc.nf'
 include { MULTIQC } from './modules/multiqc.nf'
 include { CALC_COVERAGE } from './modules/calc_coverage.nf'
-include { GENERATE_METADATA } from './modules/generate_metadata.nf'
+include { RENAME_FASTQS } from './modules/rename_fastqs.nf'
 
 // main workflow
 workflow DATA_PROCESSING {
@@ -86,17 +86,47 @@ workflow DATA_PROCESSING {
     // Start of main workflow //
     ////////////////////////////
     
-    // channel in FASTQ pairs instead
+    // channel in all FASTQ pairs
     Channel
         .fromFilePairs([
             "${params.fastq_dir}/*_R{1,2}*.{fastq,fq}{,.gz}",
-            "${params.fastq_dir}/**/*_R{1,2}*.{fastq,fq}{,.gz}"
-            ])
+            "${params.fastq_dir}/**/*_R{1,2}*.{fastq,fq}{,.gz}"], flat: true)  // generate tuple [sample_id, read1, read2]
+        // extract sample ID and lane from file base name
+        .map { base_name, read1, read2 ->
+            def sample_id = (base_name =~ /^\d+\w?-\d+/) ? 
+                            (base_name =~ /^(\d+\w?-\d+)/)[0][1] : 
+                            (base_name =~ /^(\S+)_S\d+/)[0][1]
+            def lane = (base_name =~ /L\d+/)[0]
+            tuple(sample_id, lane, read1, read2, params.platform, params.seq_center)}
+        // branch reads based on TCGB vs. short ID
+        .branch {
+            tcgb: it[0] =~ /^\d+\w?-\d+/
+            short_id: true
+        }
         .set { reads }
 
-    // TODO: write Python script to parse metadata
-    metadata = GENERATE_METADATA(reads)
-    
+    // channel in metadata
+    Channel
+        .fromPath(params.metadata)
+        .splitCsv(header: true)
+        .map { row ->
+            tuple(row."WES ID", row."Short ID") }
+        .set { metadata }
+
+    // map TCGB IDs to short IDs
+    mapped_tcgb_reads = reads.tcgb
+                            .join(metadata, by: 0)  // join the metadata channel with TCGB reads
+                            .map { tcgb_id, lane, read1, read2, platform, seq_center, short_id ->
+                                def mouse_flag = (short_id =~ /XG?\d+/) ? true : false  // mark xenografts for contamination
+                                tuple(short_id, lane, read1, read2, platform, seq_center, mouse_flag) }
+
+    // mark short id reads for mouse contamination
+    flagged_short_id_reads = reads.short_id
+                                .map { short_id, lane, read1, read2, platform, seq_center ->
+                                    def mouse_flag = (short_id =~ /\w+XG?\d+/) ? true : false 
+                                    tuple(short_id, lane, read1, read2, platform, seq_center, mouse_flag) }
+
+    mapped_tcgb_reads.view()
 
     // // run FASTQC on raw reads
     // FASTQC(reads)
