@@ -15,7 +15,7 @@ include { EXPORT } from './modules/export.nf'
 include { MERGE } from './modules/merge.nf'
 
 // main workflow
-workflow {
+workflow CNV_CALLING {
     // Show help message if requested
     if (params.help) {
         help = """Usage:
@@ -99,14 +99,20 @@ workflow {
                 "${params.bam_dir}/*.bam",      // top level directory
                 "${params.bam_dir}/**/*.bam"    // subdirectories
             ])
-        .collect()  // collect individual bams into a list
-        .set { bam_list }  // define data structure name
+        .filter { !(it =~ /(?i)(PBMC|BLD|CD45|NORM|NORMAL|Blood)/)}  // filter out normal samples (case-insensitive)
+        .collect()  // collect each tuple into a list
+        .set { tumor_bams }  // set as tumor_bams data structure
 
     // run CNVKit batch 
-    cnr_list = BATCH(bam_list)
+    cnr_list = BATCH(tumor_bams)
 
-    // ungroup list of cnr files for individual processing
-    cnr_files = cnr_list.flatten()
+    // data manipulation
+    cnr_files = cnr_list
+                    .flatten()  // ungroup list of cnr files for individual processing
+                    .map { cnr_file -> 
+                                def sample_id = (cnr_file.name =~ /^(.+?)\./)[0][1]  // match patterns before the first "."
+                                tuple(sample_id, cnr_file)
+                    }
 
     // run CNVKit segment
     cns_files = SEGMENT(cnr_files)
