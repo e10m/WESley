@@ -29,18 +29,15 @@ runs:
       with:
         version: ${{ inputs.nextflow_version }}
 
-    - name: Install miniconda
-      uses: conda-incubator/setup-miniconda@v3
-      with:
-        auto-update-conda: true
-        auto-activate-base: true
-        channels: bioconda,conda-forge,defaults
-
     - name: Install nf-test
-      shell: bash -el {0}
-      run: |
-        conda install -y bioconda::nf-test
-        nf-test version
+      uses: nick-fields/retry@v3
+      with:
+        max_attempts: 3
+        shell: bash
+        timeout_seconds: 10
+        command: |
+          wget -qO- https://get.nf-test.com | bash
+          echo "$PWD" >> $GITHUB_PATH
         
 branding:
   icon: "shuffle"

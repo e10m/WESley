@@ -1,4 +1,14 @@
 services:
+  # python container
+  python-3.10:
+    image: e10m/python:3.10
+    command: "true"
+  
+  # nextflow container
+  nextflow:
+    image: nextflow/nextflow:25.04.6
+    command: "true"
+    
   # CNVkit containers
   cnvkit:
     image: quay.io/biocontainers/cnvkit:0.9.10--pyhdfd78af_0
