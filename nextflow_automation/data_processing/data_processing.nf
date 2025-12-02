@@ -11,7 +11,7 @@ include { APPLY_BQSR } from './modules/apply_BQSR.nf'
 include { FASTQC } from './modules/fastqc.nf'
 include { MULTIQC } from './modules/multiqc.nf'
 include { CALC_COVERAGE } from './modules/calc_coverage.nf'
-include { RENAME_FASTQS } from './modules/rename_fastqs.nf'
+
 
 // main workflow
 workflow DATA_PROCESSING {
