@@ -126,58 +126,56 @@ workflow DATA_PROCESSING {
                                     def mouse_flag = (short_id =~ /\w+XG?\d+/) ? true : false 
                                     tuple(short_id, lane, read1, read2, platform, seq_center, mouse_flag) }
 
-    mapped_tcgb_reads.view()
+    // run FASTQC on raw reads
+    FASTQC(reads)
 
-    // // run FASTQC on raw reads
-    // FASTQC(reads)
+    // trim FASTQs using TrimGalore
+    trimmed_reads = TRIM(reads)
 
-    // // trim FASTQs using TrimGalore
-    // trimmed_reads = TRIM(reads)
+    // diverge the data channel into contaminated/uncontaminated reads
+    uncontaminated_reads = trimmed_reads.filter { it -> it[6] != true }  // mouse_flag is false
+    contaminated_reads = trimmed_reads.filter { it -> it[6] == true }  // mouse_flag is true
 
-    // // diverge the data channel into contaminated/uncontaminated reads
-    // uncontaminated_reads = trimmed_reads.filter { it -> it[6] != true }  // mouse_flag is false
-    // contaminated_reads = trimmed_reads.filter { it -> it[6] == true }  // mouse_flag is true
-
-    // // run BBSplit on only mouse-contaminated reads
-    // SPLIT(contaminated_reads)
-    // human_fastqs = SPLIT.out.fastqs
+    // run BBSplit on only mouse-contaminated reads
+    SPLIT(contaminated_reads)
+    human_fastqs = SPLIT.out.fastqs
     
-    // // concatenate the channels and converge data channels again
-    // merged_uncontaminated_reads = uncontaminated_reads.concat(human_fastqs)    
+    // concatenate the channels and converge data channels again
+    merged_uncontaminated_reads = uncontaminated_reads.concat(human_fastqs)    
 
-    // // align trimmed FASTQs via BWA-mem
-    // sorted_bam_files = BWA_ALIGN(merged_uncontaminated_reads)
+    // align trimmed FASTQs via BWA-mem
+    sorted_bam_files = BWA_ALIGN(merged_uncontaminated_reads)
 
-    // // group the lane-specific BAMs for each sample
-    // sorted_bam_files
-    //     // group by sample ID
-    //     .groupTuple(by: 0)
+    // group the lane-specific BAMs for each sample
+    sorted_bam_files
+        // group by sample ID
+        .groupTuple(by: 0)
 
-    //     // flatten the list  
-    //     .map { sample_id, bam_list ->
-    //             tuple(sample_id, bam_list)
-    //         }
+        // flatten the list  
+        .map { sample_id, bam_list ->
+                tuple(sample_id, bam_list)
+            }
         
-    //     // store in list
-    //     .set { sorted_bams }
+        // store in list
+        .set { sorted_bams }
 
-    // // merge BAMs and mark duplicates
-    // marked_bams = MARK_DUPES(sorted_bams)
+    // merge BAMs and mark duplicates
+    marked_bams = MARK_DUPES(sorted_bams)
 
-    // // set up tags for the BAMs and combine with reference directory
-    // tagged_bams = SET_TAGS(marked_bams)
+    // set up tags for the BAMs and combine with reference directory
+    tagged_bams = SET_TAGS(marked_bams)
 
-    // // recalibrate base quality scores and combine with reference directory
-    // recal_data_tables = RECAL_BASES(tagged_bams)
+    // recalibrate base quality scores and combine with reference directory
+    recal_data_tables = RECAL_BASES(tagged_bams)
 
-    // // apply the BQSR algorithm
-    // analysis_ready_bams = APPLY_BQSR(recal_data_tables)
+    // apply the BQSR algorithm
+    analysis_ready_bams = APPLY_BQSR(recal_data_tables)
 
-    // // use Picard to calculate coverage statistics on analysis ready bams
-    // CALC_COVERAGE(analysis_ready_bams)
+    // use Picard to calculate coverage statistics on analysis ready bams
+    CALC_COVERAGE(analysis_ready_bams)
 
-    // // run MultiQC once the entire workflow completes
-    // completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
+    // run MultiQC once the entire workflow completes
+    completion_signal = CALC_COVERAGE.out.stats.collect().map { "ready" }
 
-    // MULTIQC(completion_signal)
+    MULTIQC(completion_signal)
 }
