@@ -30,10 +30,14 @@ runs:
         version: ${{ inputs.nextflow_version }}
 
     - name: Install nf-test
-      shell: bash -el {0}
-      run: |
-        wget -qO- https://get.nf-test.com | bash
-        echo "$PWD" >> $GITHUB_PATH
+      uses: nick-fields/retry@v3
+      with:
+        max_attempts: 3
+        shell: bash
+        timeout_seconds: 10
+        command: |
+          wget -qO- https://get.nf-test.com | bash
+          echo "$PWD" >> $GITHUB_PATH
         
 branding:
   icon: "shuffle"
