@@ -19,11 +19,14 @@ process SEGMENT {
     tuple val(sample_id), path("*_noDrop_t0005.cns")
 
     script:
+    def drop_low_coverage = params.legacy ? "--drop-low-coverage" : ""
+
     """
     cnvkit.py segment \
     $cnr_file \
     -p ${params.cpus} \
     -t 0.0005 \
+    ${drop_low_coverage} \
     -o "${cnr_file.simpleName}_noDrop_t0005.cns"
     """
 }

@@ -18,9 +18,11 @@ process BATCH {
     path("*.cnr")
 
     script:
+    def cnn = params.legacy ? "KAPA_HyperExome_hg38_capture_targets.reference.cnn" : params.pooled_normal
+    
     """
     # locate the pooled normal file
-    POOLED_NORMAL=\$(find /references -name "${params.pooled_normal}" -type f | head -n 1)
+    POOLED_NORMAL=\$(find /references -name "${cnn}" -type f | head -n 1)
 
     # run the cnvkit batch pipeline
     cnvkit.py batch ${bam_list.join(' ')} \

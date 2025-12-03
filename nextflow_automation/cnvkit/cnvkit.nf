@@ -34,7 +34,8 @@ workflow CNV_CALLING {
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
         --help                        Show this help message and exit
-        
+        --legacy                      Run legacy pipeline mode (Check GitHub README for more details)
+        --create_pooled_norm          Run specific workflows to generate pooled normal
         Examples:
         
         # Basic usage with required parameters
