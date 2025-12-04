@@ -23,7 +23,7 @@ def help_message() {
 
         The typical command for running the pipeline is as follows:
         
-        nextflow -C <CONFIG_PATH> run cnvkit.nf --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --pooled_normal <FILE> --batch_name <STRING> [OPTIONS]
+        nextflow -C <CONFIG_PATH> run cnvkit.nf -entry "CNV_CALLING" --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --pooled_normal <FILE> --batch_name <STRING> [OPTIONS]
         
         Required arguments:
         --bam_dir                     Path to the directory containing input BAM files
@@ -40,21 +40,20 @@ def help_message() {
         Examples:
         
         # Basic usage with required parameters
-        nextflow -C nextflow.config run cnvkit.nf --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --pooled_normal pooled_normal.cnn --batch_name batch_01
+        nextflow -C nextflow.config run cnvkit.nf -entry "CNV_CALLING" --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --pooled_normal pooled_normal.cnn --batch_name batch_01
         
         # With optional parameters
-        nextflow -C nextflow.config run cnvkit.nf --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --pooled_normal pooled_normal.cnn --batch_name batch_01 --cpus 30
+        nextflow -C nextflow.config run cnvkit.nf -entry "CNV_CALLING" --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --pooled_normal pooled_normal.cnn --batch_name batch_01 --cpus 30
         """.stripIndent()
         
     }
-    
 
     if (workflow.manifest?.name == "CREATE_NORM") {
         log.info """Usage:
 
         The typical command for running the pipeline is as follows:
         
-        nextflow -C <CONFIG_PATH> run cnvkit.nf --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --capture_kit <STRING> --annotation <FILE> --targets <FILE> [OPTIONS]
+        nextflow -C <CONFIG_PATH> run cnvkit.nf -entry "CREATE_NORM" --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --capture_kit <STRING> --annotation <FILE> --targets <FILE> [OPTIONS]
         
         Required arguments:
         --bam_dir                     Path to the directory containing normal BAM files
@@ -71,7 +70,7 @@ def help_message() {
         
         Examples:
         # Basic usage with required parameters
-        nextflow -C nextflow.config run cnvkit.nf --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --capture_kit twist_exome --annotation refFlat.txt --targets targets.bed
+        nextflow -C nextflow.config run cnvkit.nf -entry "CREATE_NORM" --bam_dir /path/to/bams --output_dir /path/to/output --ref_dir /path/to/reference --capture_kit twist_exome --annotation refFlat.txt --targets targets.bed
         """.stripIndent()
     }
     
