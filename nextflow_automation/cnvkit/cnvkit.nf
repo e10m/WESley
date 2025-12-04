@@ -177,6 +177,11 @@ workflow CREATE_NORM {
         exit 1
     }
 
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
     if (!params.output_dir) {
         error "ERROR: --output_dir parameter is required"
         exit 1

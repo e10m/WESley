@@ -23,10 +23,6 @@ process POOL {
     ANNOTATION=\$(find /references -name "${params.annotation}" -type f | head -n 1)
     TARGETS=\$(find /references -name "${params.targets}" -type f | head -n 1)
 
-    # TODO: debug the annotation / targets variable above
-    echo \$ANNOTATION
-    echo \$TARGETS
-
     # run the cnvkit batch pipeline
     cnvkit.py batch \
     --normal ${normal_bam_list.join(' ')} \
