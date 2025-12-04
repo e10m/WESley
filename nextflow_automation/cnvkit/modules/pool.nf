@@ -21,7 +21,7 @@ process POOL {
     """
     # find and initialize reference files
     ANNOTATION=\$(find /references -name "${params.annotation}" -type f | head -n 1)
-    TARGETS=\$(find /references -name "${params.target}" -type f | head -n 1)
+    TARGETS=\$(find /references -name "${params.targets}" -type f | head -n 1)
 
     # run the cnvkit batch pipeline
     cnvkit.py batch \
