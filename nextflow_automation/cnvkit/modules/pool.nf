@@ -8,7 +8,7 @@ CNVKit version: 0.9.10
 */
 
 process POOL {
-    publishDir "${params.ref_dir}/${params.capture_kit}/", mode: 'copy', pattern: "*.cnn"
+    publishDir "${params.ref_dir}/${params.capture_kit}/", mode: 'copy', pattern: "*pooled*normal*cnn"
     cpus params.cpus
 
     input:
