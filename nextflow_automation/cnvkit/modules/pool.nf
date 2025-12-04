@@ -8,7 +8,7 @@ CNVKit version: 0.9.10
 */
 
 process POOL {
-    publishDir "${params.ref_dir}/${params.capture_kit}/", mode: 'copy', pattern: "*"
+    publishDir "${params.ref_dir}/${params.capture_kit}/", mode: 'copy', pattern: "*.cnn"
     cpus params.cpus
 
     input:
@@ -30,7 +30,7 @@ process POOL {
     --annotate "\${ANNOTATION}" \
     --targets "\${TARGETS}" \
     --access "/references/${params.access}" \
-    --output-reference "${params.capture_kit}_pooled_normal.cnn" \
+    --output-reference "${params.capture_kit}_${params.seq_platform}_pooled_normal.cnn" \
     -p ${params.cpus}
     """
 }
