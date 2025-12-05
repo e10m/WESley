@@ -114,15 +114,20 @@ nextflow run mutation_calling.nf --with-docker -with-trace \
 | `--batch_number` | Batch number |
 | `--app_dir`      | Directory to all the Java JARs / accessory software (eg: Mutect2.wdl) |
 
-## How To Run (CNV Calling)
+## How To Run (cnvkit.nf:CNV_CALLING)
 
 ```bash
-nextflow run cnvkit.nf \
---with-docker -with-trace \
---bam_dir /path/to/batch20-bams/ \
---output_dir /path/to/batch20-outputs/ \
---ref_dir /references \
---batch_name 20
+nextflow -C "nextflow.config" \
+run "cnvkit.nf" \
+-entry "CNV_CALLING" \
+-with-trace -with-docker \
+--bam_dir "/path/to/bams" \
+--output_dir "/results/" \
+--ref_dir "/path/to/references" \
+--pooled_normal "normal.cnn" \
+--cpus 40 \
+--batch_name "wes-10" \
+
 ```
 
 **Script Parameters:**
@@ -130,9 +135,40 @@ nextflow run cnvkit.nf \
 |------------------|-------------|
 | --bam_dir        | BAM file directory |
 | --output_dir     | Directory to publish outputs |
+| --ref_dir        | Path to the references folder |
+| --pooled_normal  | Pooled normal reference file (CNN format) |
 | --batch_name     | Batch name for output renaming |
+| --cpus           | Number of CPUs to allocate (Default: 1) |
+| --legacy         | Run pipeline in legacy mode |
+
+## How to Run (cnvkit.nf:CREATE_NORM)
+```bash
+nextflow -C "nextflow.config" \
+run "cnvkit.nf" \
+-entry "CREATE_NORM" \
+-with-trace -with-docker \
+--bam_dir "/path/to/bams" \
+--output_dir "/results/" \
+--ref_dir "/path/to/references" \
+--capture_kit "seqcap-v3" \
+--annotation "hg38_refFlat.txt" \
+--targets "seqcap_hg38_capture_targets.bed" \
+--cpus 39
+```
+
+**Script Parameters:**
+| Flag             | Description |
+|------------------|-------------|
+| --bam_dir        | BAM file directory |
+| --output_dir     | Directory to publish outputs |
 | --ref_dir        | Path to the references folder |
 | --cpus           | Number of CPUs to allocate (Default: 1) |
+| --capture_kit    | Name of the capture kit used for sequencing |
+| --seq_platform   | Name of the sequencing platform used |
+| --annotation     | Gene annotation file in refFlat format (e.g., hg38_refFlat.txt) |
+| --targets        | BED file containing capture target regions |
+| --ref_genome     | Reference genome used (Default: hg38.fasta) |
+| --help           | Display the help message |
 
 ## How To Run (Consensus Calling)
 ```bash
