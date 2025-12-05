@@ -87,7 +87,7 @@ workflow DATA_PROCESSING {
     ////////////////////////////
     
     // channel in all FASTQ pairs
-    Channel
+    channel
         .fromFilePairs([
             "${params.fastq_dir}/*_R{1,2}*.{fastq,fq}{,.gz}",
             "${params.fastq_dir}/**/*_R{1,2}*.{fastq,fq}{,.gz}"], flat: true)  // generate tuple [sample_id, read1, read2]
@@ -106,7 +106,7 @@ workflow DATA_PROCESSING {
         .set { reads }
 
     // channel in metadata
-    Channel
+    channel
         .fromPath(params.metadata)
         .splitCsv(header: true)
         .map { row ->
