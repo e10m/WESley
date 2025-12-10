@@ -1,20 +1,18 @@
 nextflow.enable.dsl=2
 
 // import modules
-include { MAKE_JSON } from './modules/make_json.nf'
-include { PILEUP } from './modules/pileup.nf'
-include { MUTECT2 } from './modules/mutect2.nf'
-include { MUSE } from './modules/muse.nf'
-include { VARSCAN2 } from './modules/varscan2.nf'
-include { INDEX } from './modules/index.nf'
-include { MERGE_VCFS } from './modules/merge_vcf.nf'
-include { SELECT_VARIANTS } from './modules/select_variants.nf'
-include { VEP } from './modules/vep.nf'
-include { REHEADER } from './modules/reheader.nf'
-include { CREATE_MAF } from './modules/create_maf.nf'
-include { KEEP_NONSYNONYMOUS } from './modules/keep_nonsynonymous.nf'
-include { RENAME_HG38 } from './modules/rename_hg38.nf'
-include { ONCOKB } from './modules/oncokb.nf'
+include { PILEUP } from './modules/varscan2/pileup.nf'
+include { MUSE } from './modules/muse/muse.nf'
+include { VARSCAN2 } from './modules/varscan2/varscan2.nf'
+include { INDEX } from './modules/shared/index.nf'
+include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
+include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
+include { VEP } from './modules/shared/vep.nf'
+include { REHEADER } from './modules/shared/reheader.nf'
+include { CREATE_MAF } from './modules/shared/create_maf.nf'
+include { KEEP_NONSYNONYMOUS } from './modules/shared/keep_nonsynonymous.nf'
+include { RENAME_HG38 } from './modules/shared/rename_hg38.nf'
+include { ONCOKB } from './modules/shared/oncokb.nf'
 
 // main workflow
 workflow {
