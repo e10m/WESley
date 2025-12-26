@@ -4,6 +4,7 @@ nextflow.enable.dsl=2
 include { PILEUP } from './modules/varscan2/pileup.nf'
 include { MUSE } from './modules/muse/muse.nf'
 include { VARSCAN2 } from './modules/varscan2/varscan2.nf'
+include { MUTECT2 } from './modules/mutect2/mutect2.nf'
 include { INDEX } from './modules/shared/index.nf'
 include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
 include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
@@ -92,7 +93,7 @@ workflow {
     ////////////////////////////
     
     // channel in metadata and save as a set for downstream processes
-    Channel
+    channel
         .fromPath(params.metadata)
         .splitCsv(header: true, sep: '\t')
         .map { row ->
@@ -109,16 +110,15 @@ workflow {
         .set { bams }
 
     // split channels based on if normal is available
-    bams.branch {
-        paired: it[6] != []
-        tumor_only: it[6] == []
-    }.set { samples }
-
-    // make metadata in JSON format
-    json = MAKE_JSON(bams)
+    bams
+    .branch { row ->
+        paired: row[6] != []
+        tumor_only: row[6] == []
+    }
+    .set { samples }
 
     // run the Mutect2 variant caller pipeline
-    mutect2_vcfs = MUTECT2(json)
+    mutect2_vcfs = MUTECT2(bams)
 
     // run MuSE variant caller
     muse_vcfs = MUSE(samples.paired)
