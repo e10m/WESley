@@ -1,25 +1,24 @@
 nextflow_process {
 
     name "Test Process MARK_DUPES"
-    script "modules/mark_duplicates.nf"
+    script "../../../data_processing/modules/mark_duplicates.nf"
     process "MARK_DUPES"
-    config "../data-processing-tests.config"
+    config "../../shared-test.config"
 
     test("Should mark the duplicates without failures") {
 
         when {
-            params {
-                // creating parameter for easy access to test data
-                test_data = "${projectDir}/test-data/bams/chr22"
-                ref_dir = "${projectDir}/test-data/references"
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
             }
             process {
                 """
                 input[0] = [
                     'test',
                     [ 
-                        file("${params.test_data}/test.paired_end.sorted.bam", checkIfExists: true), 
-                        file("${params.test_data}/test2.paired_end.sorted.bam", checkIfExists: true)
+                        file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true), 
+                        file("${params.test_data}/bams/chr22/test2.paired_end.sorted.bam", checkIfExists: true)
                     ]
                 ]
                 """

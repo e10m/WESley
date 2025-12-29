@@ -1,24 +1,23 @@
 nextflow_process {
 
     name "Test Process RECAL_BASES"
-    script "modules/recal_bases.nf"
+    script "../../../data_processing/modules/recal_bases.nf"
     process "RECAL_BASES"
-    config "../data-processing-tests.config"
+    config "../../shared-test.config"
 
     test("Should generate recalibration table without failures") {
 
         when {
-            params {
-                test_data = "${projectDir}/test-data/bams/chr20"
-                ref_dir = "${projectDir}/test-data/references"
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
             }
-
             process {
                 """
                 input[0] = [
                     'dummy',
-                    file("${params.test_data}/dummy_L001.sorted.bam", checkIfExists: true),
-                    file("${params.test_data}/dummy_L001.sorted.bam.bai", checkIfExists: true)
+                    file("${params.test_data}/bams/chr20/dummy_L001.sorted.bam", checkIfExists: true),
+                    file("${params.test_data}/bams/chr20/dummy_L001.sorted.bam.bai", checkIfExists: true)
                 ]
                 """
             }

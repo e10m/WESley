@@ -1,23 +1,23 @@
 nextflow_process {
 
-    name "Test Process SET_TAGS"
-    script "modules/set_tags.nf"
-    process "SET_TAGS"
-    config "../data-processing-tests.config"
+    name "Test Process APPLY_BQSR"
+    script "../../../data_processing/modules/apply_BQSR.nf"
+    process "APPLY_BQSR"
+    config "../../shared-test.config"
 
-    test("Should add the metadata tags to BAM without failures") {
+    test("Should apply BQSR to dummy BAMs without failures") {
 
         when {
-            params {
-                test_data = "${projectDir}/test-data/bams/chr22"
-                ref_dir = "${projectDir}/test-data/references"
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
             }
             process {
                 """
                 input[0] = [
                     'test',
-                    file("${params.test_data}/test.paired_end.sorted.bam", checkIfExists: true),
-                    file("${params.test_data}/test.paired_end.sorted.bam.bai", checkIfExists: true)
+                    file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true),
+                    file("${params.test_data}/recal-tables/test.baserecalibrator.table", checkIfExists: true)
                 ]
                 """
             }
@@ -25,9 +25,9 @@ nextflow_process {
 
         then {
             assert process.success
-            println("\n* Process completed successfully; metadata tags added to BAM")
+            println("\n* Process completed successfully; BQSR applied")
 
-            with(process.out.tagged_bams) {
+            with(process.out.bqsr_bams) {
                 def (sample_id, bam, bai) = get(0)
 
                 assert get(0).size() == 3

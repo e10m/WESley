@@ -1,25 +1,24 @@
 nextflow_process {
 
     name "Test Process TRIM"
-    script "modules/trim_adapters.nf"
+    script "../../../data_processing/modules/trim_adapters.nf"
     process "TRIM"
-    config "../data-processing-tests.config"
+    config "../../shared-test.config"
 
     test("Should trim FASTQs without failures") {
 
         when {
-            params {
-                // creating parameter for easy access to test data
-                test_data = "${projectDir}/test-data/fastqs"
-                ref_dir = "${projectDir}/test-data/references"
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
             }
             process {
                 """
                 input[0] = [
                     'dummy',
                     'L001',
-                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
-                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/fastqs/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/fastqs/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
                     'illumina_novaseq_x',
                     'tcgb',
                     false
