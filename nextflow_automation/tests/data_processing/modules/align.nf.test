@@ -8,7 +8,7 @@ nextflow_process {
     test("Should align via bwa-mem without failures") {
         when {
             params{
-                test_data = "${projectDir}/test-data"
+                test_data = "${projectDir}/test-data/fastqs"
                 ref_dir = "${params.test_data}/references"
             }
             process {
@@ -17,8 +17,8 @@ nextflow_process {
                 input[0] = [
                     'dummy',
                     'L001',
-                    file("${params.test_data}/fastqs/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
-                    file("${params.test_data}/fastqs/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
                     'illumina_novaseq_x',
                     'tcgb',
                     false

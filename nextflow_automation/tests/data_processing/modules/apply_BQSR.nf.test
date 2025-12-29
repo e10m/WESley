@@ -8,8 +8,8 @@ nextflow_process {
     test("Should apply BQSR to dummy BAMs without failures") {
 
         when {
-            params{
-                test_data = "${projectDir}/test-data"
+            params {
+                test_data = "${projectDir}/test-data/"
                 ref_dir = "${params.test_data}/references"
             }
             process {
