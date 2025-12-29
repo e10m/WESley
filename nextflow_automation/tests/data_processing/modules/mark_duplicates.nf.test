@@ -4,6 +4,7 @@ nextflow_process {
     script "../../../data_processing/modules/mark_duplicates.nf"
     process "MARK_DUPES"
     config "../../shared-test.config"
+    config "../../../data_processing/nextflow.config"
 
     test("Should mark the duplicates without failures") {
 

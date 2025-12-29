@@ -4,6 +4,7 @@ nextflow_process {
     script "../../../data_processing/modules/recal_bases.nf"
     process "RECAL_BASES"
     config "../../shared-test.config"
+    config "../../../data_processing/nextflow.config"
 
     test("Should generate recalibration table without failures") {
 

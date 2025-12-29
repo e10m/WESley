@@ -4,6 +4,7 @@ nextflow_process {
     script "../../../data_processing/modules/set_tags.nf"
     process "SET_TAGS"
     config "../../shared-test.config"
+    config "../../../data_processing/nextflow.config"
 
     test("Should add the metadata tags to BAM without failures") {
 

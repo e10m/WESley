@@ -4,6 +4,7 @@ nextflow_process {
     script "../../../data_processing/modules/align.nf"
     process "BWA_ALIGN"
     config "../../shared-test.config"
+    config "../../../data_processing/nextflow.config"
 
     test("Should align via bwa-mem without failures") {
         when {
@@ -27,7 +28,7 @@ nextflow_process {
             }
         }
 
-        then {
+        then {            
             // check the process succeeded without error messages
             assert process.success
             println("\n* The alignment via bwa-mem succeeded")
