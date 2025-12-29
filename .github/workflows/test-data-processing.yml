@@ -5,31 +5,35 @@ on:
     branches:
       - main
 
+  push:
+    branches-ignore:
+      - main
+
 jobs:
   test_data_processing:
     strategy:
       matrix:
         include:
           - name: TRIM
-            test: tests/modules/trim_adapters.nf.test
+            test: tests/data_processing/modules/trim_adapters.nf.test
             image: quay.io/biocontainers/trim-galore:0.6.6--0
           - name: FASTQC
-            test: tests/modules/fastqc.nf.test
+            test: tests/data_processing/modules/fastqc.nf.test
             image: biocontainers/fastqc:v0.11.9_cv8
           - name: BWA_ALIGN
-            test: tests/modules/align.nf.test
+            test: tests/data_processing/modules/align.nf.test
             image: e10m/bwa-and-samtools:latest
           - name: MARK_DUPES
-            test: tests/modules/mark_duplicates.nf.test
+            test: tests/data_processing/modules/mark_duplicates.nf.test
             image: broadinstitute/gatk:4.2.0.0
           - name: SET_TAGS
-            test: tests/modules/set_tags.nf.test
+            test: tests/data_processing/modules/set_tags.nf.test
             image: broadinstitute/gatk:4.2.0.0
           - name: RECAL_BASES
-            test: tests/modules/recal_bases.nf.test
+            test: tests/data_processing/modules/recal_bases.nf.test
             image: broadinstitute/gatk:4.2.0.0
           - name: APPLY_BQSR
-            test: tests/modules/apply_BQSR.nf.test
+            test: tests/data_processing/modules/apply_BQSR.nf.test
             image: broadinstitute/gatk:4.2.0.0
     
     runs-on: ubuntu-latest
@@ -47,5 +51,5 @@ jobs:
 
       - name: Run nf-test
         shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing
+        working-directory: ./nextflow_automation/
         run: nf-test test ${{ matrix.test }}
