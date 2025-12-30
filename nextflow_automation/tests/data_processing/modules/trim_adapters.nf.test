@@ -12,6 +12,7 @@ nextflow_process {
             params{
                 test_data = "${projectDir}/test-data"
                 ref_dir = "${params.test_data}/references"
+                test_mode = true
             }
             process {
                 """
