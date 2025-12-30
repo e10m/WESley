@@ -4,7 +4,6 @@ nextflow_process {
     script "../../../data_processing/modules/apply_BQSR.nf"
     process "APPLY_BQSR"
     config "../../shared-test.config"
-    config "../../../data_processing/nextflow.config"
 
     test("Should apply BQSR to dummy BAMs without failures") {
 

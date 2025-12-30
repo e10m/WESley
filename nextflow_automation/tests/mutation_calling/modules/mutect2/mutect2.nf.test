@@ -1,7 +1,7 @@
 nextflow_process {
 
     name "Test Process MUTECT2"
-    script "./modules/mutect2/mutect2.nf"
+    script "../../../modules/mutect2/mutect2.nf"
     process "MUTECT2"
     config "../../../shared-test.config"
 
