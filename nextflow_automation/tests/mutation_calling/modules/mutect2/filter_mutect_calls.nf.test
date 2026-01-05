@@ -1,0 +1,74 @@
+nextflow_process {
+
+    name "Test Process FILTER_MUTECT_CALLS"
+    script "../../../../mutation_calling/modules/mutect2/filter_mutect_calls.nf"
+    process "FILTER_MUTECT_CALLS"
+    config "../../../shared-test.config"
+
+    test("Should filter variants with contamination and orientation data") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample1', 
+                    'tumor1', 
+                    'normal1',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test2.paired_end.sorted.bam'),
+                    file('${projectDir}/../test-data/recal-tables/test.baserecalibrator.table')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 4
+                assert get(0) == 'sample1'
+                assert get(1) == 'tumor1'
+                assert get(2) == 'normal1'
+                assert get(3).name == 'sample1.mutect2.filtered.vcf'
+            }
+        }
+
+    }
+
+    test("Should handle tumor-only filtering") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample2', 
+                    'tumor2', 
+                    'normal2',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test2.paired_end.sorted.bam'),
+                    []
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 4
+                assert get(0) == 'sample2'
+                assert get(1) == 'tumor2'
+                assert get(2) == 'normal2'
+                assert get(3).name == 'sample2.mutect2.filtered.vcf'
+            }
+        }
+
+    }
+
+}

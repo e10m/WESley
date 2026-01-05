@@ -4,7 +4,11 @@ nextflow.enable.dsl=2
 include { PILEUP } from './modules/varscan2/pileup.nf'
 include { MUSE } from './modules/muse/muse.nf'
 include { VARSCAN2 } from './modules/varscan2/varscan2.nf'
-include { MUTECT2 } from './modules/mutect2/mutect2.nf'
+include { MUTECT2_CALL } from './modules/mutect2/mutect2_call.nf'
+include { GET_PILEUP_SUMMARIES } from './modules/mutect2/get_pileup_summaries.nf'
+include { CALCULATE_CONTAMINATION } from './modules/mutect2/calculate_contamination.nf'
+include { LEARN_READ_ORIENTATION } from './modules/mutect2/learn_read_orientation.nf'
+include { FILTER_MUTECT_CALLS } from './modules/mutect2/filter_mutect_calls.nf'
 include { INDEX } from './modules/shared/index.nf'
 include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
 include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
@@ -117,8 +121,20 @@ workflow {
     }
     .set { samples }
 
-    // run the Mutect2 variant caller pipeline
-    mutect2_vcfs = MUTECT2(bams)
+    // run Mutect2 steps defined by GATK best practices
+    mutect2_calls = MUTECT2_CALL(bams)
+    pileup_summaries = GET_PILEUP_SUMMARIES(bams)
+    contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
+    orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
+    
+    // join contamination and orientation data for filtering
+    filter_input = orientation_models
+        .join(contamination_data, by: [0, 1, 2])
+        .map { sample_id, tumor_id, normal_id, unfiltered_vcf, orientation_model, contamination_table, segments_table ->
+            tuple(sample_id, tumor_id, normal_id, unfiltered_vcf, orientation_model, contamination_table, segments_table)
+        }
+    
+    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input)
 
     // run MuSE variant caller
     muse_vcfs = MUSE(samples.paired)

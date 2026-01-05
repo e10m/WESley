@@ -1,0 +1,72 @@
+nextflow_process {
+
+    name "Test Process LEARN_READ_ORIENTATION"
+    script "../../../../mutation_calling/modules/mutect2/learn_read_orientation.nf"
+    process "LEARN_READ_ORIENTATION"
+    config "../../../shared-test.config"
+
+    test("Should process F1R2 data") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample1', 
+                    'tumor1', 
+                    'normal1',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample1'
+                assert get(1) == 'tumor1'
+                assert get(2) == 'normal1'
+                assert get(3).name == 'dummy_L001.sorted.bam'
+                assert get(4).name == 'sample1.read-orientation-model.tar.gz'
+            }
+        }
+
+    }
+
+    test("Should handle tumor-only samples") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample2', 
+                    'tumor2', 
+                    'normal2',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test2.paired_end.sorted.bam')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample2'
+                assert get(1) == 'tumor2'
+                assert get(2) == 'normal2'
+                assert get(3).name == 'dummy_L001.sorted.bam'
+                assert get(4).name == 'sample2.read-orientation-model.tar.gz'
+            }
+        }
+
+    }
+
+}

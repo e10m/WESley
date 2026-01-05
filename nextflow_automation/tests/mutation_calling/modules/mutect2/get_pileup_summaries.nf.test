@@ -1,0 +1,78 @@
+nextflow_process {
+
+    name "Test Process GET_PILEUP_SUMMARIES"
+    script "../../../../mutation_calling/modules/mutect2/get_pileup_summaries.nf"
+    process "GET_PILEUP_SUMMARIES"
+    config "../../../shared-test.config"
+
+    test("Should run paired mode") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample1', 
+                    'tumor1', 
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam.bai'),
+                    [],
+                    'normal1',
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam.bai')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample1'
+                assert get(1) == 'tumor1'
+                assert get(2) == 'normal1'
+                assert get(3).name == 'sample1.tumor-pileups.table'
+                assert get(4).name == 'sample1.normal-pileups.table'
+            }
+        }
+
+    }
+
+    test("Should run tumor-only mode") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample2', 
+                    'tumor2', 
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam.bai'),
+                    [],
+                    'normal2',
+                    [],
+                    []
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample2'
+                assert get(1) == 'tumor2'
+                assert get(2) == 'normal2'
+                assert get(3).name == 'sample2.tumor-pileups.table'
+                assert get(4).name == 'sample2.normal-pileups.table'
+            }
+        }
+
+    }
+
+}

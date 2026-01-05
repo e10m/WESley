@@ -1,0 +1,72 @@
+nextflow_process {
+
+    name "Test Process CALCULATE_CONTAMINATION"
+    script "../../../../mutation_calling/modules/mutect2/calculate_contamination.nf"
+    process "CALCULATE_CONTAMINATION"
+    config "../../../shared-test.config"
+
+    test("Should run paired mode with pileup tables") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample1', 
+                    'tumor1', 
+                    'normal1',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample1'
+                assert get(1) == 'tumor1'
+                assert get(2) == 'normal1'
+                assert get(3).name == 'sample1.contamination.table'
+                assert get(4).name == 'sample1.segments.table'
+            }
+        }
+
+    }
+
+    test("Should run tumor-only mode") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    'sample2', 
+                    'tumor2', 
+                    'normal2',
+                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
+                    []
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            with(process.out[0]) {
+                assert size() == 5
+                assert get(0) == 'sample2'
+                assert get(1) == 'tumor2'
+                assert get(2) == 'normal2'
+                assert get(3).name == 'sample2.contamination.table'
+                assert get(4).name == 'sample2.segments.table'
+            }
+        }
+
+    }
+
+}
