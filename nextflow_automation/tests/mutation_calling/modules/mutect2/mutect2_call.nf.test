@@ -8,17 +8,23 @@ nextflow_process {
     test("Should run without failures") {
 
         when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/bams/chr22"
+                ref_dir = "${projectDir}/test-data/references"
+            }
+
             process {
                 """
                 input[0] = [
-                    'sample1', 
-                    'tumor1', 
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam.bai'),
+                    'test', 
+                    'testT', 
+                    file('${params.test_data}/test2.paired_end.sorted.bam'),
+                    file('${params.test_data}/test2.paired_end.sorted.bam.bai'),
                     [],
-                    'normal1',
-                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam.bai')
+                    'testN',
+                    file('${params.test_data}/test.paired_end.sorted.bam'),
+                    file('${params.test_data}/test.paired_end.sorted.bam.bai'),
                 ]
                 """
             }
@@ -26,21 +32,18 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
+            assert process.out.size() == 1  // check for final output tuple
 
-            def output_tuple = process.out
-            println "$output_tuple"
+            def output_tuple = process.out[0][0]
 
-            // with(output_tuple) {
-            //     assert size() == 5
-            //     // assert get(0) == 'sample1'
-            //     // assert get(1) == 'tumor1'
-            //     // assert get(2) == 'normal1'
-            //     // assert get(3).name == 'sample1.unfiltered.vcf'
-            //     // assert get(4).name == 'sample1.f1r2.tar.gz'
-            // }
+            // validate the outputs
+            assert output_tuple.size() == 5
+            assert output_tuple[0] == 'test'
+            assert output_tuple[1] == 'testT'
+            assert output_tuple[2] == 'testN'
+            assert file(output_tuple[3]).name == 'test.unfiltered.vcf'
+            assert file(output_tuple[4]).name == 'test.f1r2.tar.gz'
         }
-
     }
 
     // test("Should run tumor-only mode") {

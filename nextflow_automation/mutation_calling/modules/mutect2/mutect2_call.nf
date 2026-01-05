@@ -21,15 +21,19 @@ process MUTECT2_CALL {
     script:
     def normal_args = normal_bam.name != 'NO_FILE' && normal_bam.size() > 0 ? 
         "-I ${normal_bam} -normal ${normal_id}" : ""
-    
+
+    def ref_genome = params.test_mode ? "hg38_chr22.fasta" : "Homo_sapiens_assembly38.fasta"
+    def germline_resource = params.test_mode ? "gnomAD_chr22.vcf.gz" : "af-only-gnomad.hg38.vcf.gz"
+    def interval_list = params.test_mode ? "genome_intervals.hg38_chr22.bed" : "KAPA_HyperExome_hg38_capture_targets.Mutect2.interval_list"
+
     """
     gatk Mutect2 \\
-        -R /references/Homo_sapiens_assembly38.fasta \\
+        -R "/references/${ref_genome}" \\
         -I ${tumor_bam} \\
         ${normal_args} \\
         -tumor ${tumor_id} \\
-        --germline-resource /references/af-only-gnomad.hg38.vcf.gz \\
-        -L /references/KAPA_HyperExome_hg38_capture_targets.Mutect2.interval_list \\
+        --germline-resource "/references/${germline_resource}" \\
+        -L "/references/${interval_list}" \\
         --f1r2-tar-gz ${sample_id}.f1r2.tar.gz \\
         -O ${sample_id}.unfiltered.vcf \\
         --genotype-germline-sites true \\
