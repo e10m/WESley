@@ -5,7 +5,7 @@ nextflow_process {
     process "MUTECT2_CALL"
     config "../../../shared-test.config"
 
-    test("Should run without failures") {
+    test("Should run paired calling without failures") {
 
         when {
             params {
@@ -46,39 +46,45 @@ nextflow_process {
         }
     }
 
-    // test("Should run tumor-only mode") {
+    test("Should run tumor-only mode without failing") {
 
-    //     when {
-    //         process {
-    //             """
-    //             input[0] = [
-    //                 'sample2', 
-    //                 'tumor2', 
-    //                 file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-    //                 file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam.bai'),
-    //                 [],
-    //                 'normal2',
-    //                 [],
-    //                 []
-    //             ]
-    //             """
-    //         }
-    //     }
+        when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/bams/chr22"
+                ref_dir = "${projectDir}/test-data/references"
+            }
+            
+            process {
+                """
+                input[0] = [
+                    'test', 
+                    'testT', 
+                    file('${params.test_data}/test2.paired_end.sorted.bam'),
+                    file('${params.test_data}/test2.paired_end.sorted.bam.bai'),
+                    [],
+                    'testN',
+                    [],
+                    []
+                ]
+                """
+            }
+        }
 
-    //     then {
-    //         assert process.success
-    //         assert process.out.size() == 1
+        then {
+            assert process.success
+            assert process.out.size() == 1  // check for final output tuple
 
-    //         with(process.out[0]) {
-    //             assert size() == 5
-    //             assert get(0) == 'sample2'
-    //             assert get(1) == 'tumor2'
-    //             assert get(2) == 'normal2'
-    //             assert get(3).name == 'sample2.unfiltered.vcf'
-    //             assert get(4).name == 'sample2.f1r2.tar.gz'
-    //         }
-    //     }
+            def output_tuple = process.out[0][0]
 
-    // }
+            // validate the outputs
+            assert output_tuple.size() == 5
+            assert output_tuple[0] == 'test'
+            assert output_tuple[1] == 'testT'
+            assert output_tuple[2] == 'testN'
+            assert file(output_tuple[3]).name == 'test.unfiltered.vcf'
+            assert file(output_tuple[4]).name == 'test.f1r2.tar.gz'
+        }
 
+    }
 }
