@@ -16,7 +16,7 @@ jobs:
         include:
           - name: "MUTECT2_CALL"
             image: "broadinstitute/gatk:4.2.0.0"
-            test: "mutation_calling/modules/mutect2/mutect2_call.nf.test"
+            test: "tests/mutation_calling/modules/mutect2/mutect2_call.nf.test"
     
     runs-on: ubuntu-latest
 
