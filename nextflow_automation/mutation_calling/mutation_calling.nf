@@ -125,7 +125,7 @@ workflow {
     mutect2_calls = MUTECT2_CALL(bams)
     pileup_summaries = GET_PILEUP_SUMMARIES(bams)
     contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
-    orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
+    orientation_models = LEARN_READ_ORIENTATION()
     
     // join contamination and orientation data for filtering
     filter_input = orientation_models
