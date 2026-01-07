@@ -19,9 +19,11 @@ process MUTECT2_CALL {
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.unfiltered.vcf"), path("${sample_id}.f1r2.tar.gz")
 
     script:
-    def normal_args = normal_bam.name != 'NO_FILE' && normal_bam.size() > 0 ? 
-        "-I ${normal_bam} -normal ${normal_id}" : ""
+    // change arguments based on tumor-only vs. paired calling
+    def normal_args = (normal_bam.name != 'NO_FILE' && normal_bam.size() > 0 ? 
+        "-I ${normal_bam} -normal ${normal_id}" : "")
 
+    // change parameters based on testing or production environment
     def ref_genome = params.test_mode ? "hg38_chr22.fasta" : "Homo_sapiens_assembly38.fasta"
     def germline_resource = params.test_mode ? "gnomAD_chr22.vcf.gz" : "af-only-gnomad.hg38.vcf.gz"
     def interval_list = params.test_mode ? "genome_intervals.hg38_chr22.bed" : "KAPA_HyperExome_hg38_capture_targets.Mutect2.interval_list"
@@ -31,13 +33,16 @@ process MUTECT2_CALL {
         -R "/references/${ref_genome}" \\
         -I ${tumor_bam} \\
         ${normal_args} \\
-        -tumor ${tumor_id} \\
         --germline-resource "/references/${germline_resource}" \\
         -L "/references/${interval_list}" \\
         --f1r2-tar-gz ${sample_id}.f1r2.tar.gz \\
         -O ${sample_id}.unfiltered.vcf \\
         --genotype-germline-sites true \\
         --genotype-pon-sites true \\
-        --max-mnp-distance 0
+        --downsampling-stride 20 \\
+        --max-reads-per-alignment-start 0 \\
+        --max-mnp-distance 0 \\
+        --max-suspicious-reads-per-alignment-start 6 \\
+        -ip 200
     """
 }
