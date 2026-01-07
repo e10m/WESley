@@ -17,6 +17,10 @@ jobs:
           - name: "MUTECT2_CALL"
             image: "broadinstitute/gatk:4.2.0.0"
             test: "tests/mutation_calling/modules/mutect2/mutect2_call.nf.test"
+
+          - name: "GET_PILEUP_SUMMARIES"
+            image: "broadinstitute/gatk:4.2.0.0"
+            test: "tests/mutation_calling/modules/mutect2/get_pileup_summaries.nf.test"
     
     runs-on: ubuntu-latest
 
