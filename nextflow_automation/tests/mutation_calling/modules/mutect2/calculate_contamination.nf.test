@@ -6,16 +6,19 @@ nextflow_process {
     config "../../../shared-test.config"
 
     test("Should run paired mode with pileup tables") {
-
         when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/pileups"
+            }
             process {
                 """
                 input[0] = [
-                    'sample1', 
-                    'tumor1', 
-                    'normal1',
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam')
+                    'test', 
+                    'testT', 
+                    'testN',
+                    file('${params.test_data}/test.tumor-pileups.table'),
+                    file('${params.test_data}/test.normal-pileups.table')
                 ]
                 """
             }
@@ -25,29 +28,33 @@ nextflow_process {
             assert process.success
             assert process.out.size() == 1
 
-            with(process.out[0]) {
+            def output_tuple = process.out[0][0]
+
+            with(output_tuple) {
                 assert size() == 5
-                assert get(0) == 'sample1'
-                assert get(1) == 'tumor1'
-                assert get(2) == 'normal1'
-                assert get(3).name == 'sample1.contamination.table'
-                assert get(4).name == 'sample1.segments.table'
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.paired.contamination.table'
+                assert file(get(4)).name == 'test.paired.segments.table'
             }
         }
-
     }
 
     test("Should run tumor-only mode") {
-
         when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/pileups"
+            }
             process {
                 """
                 input[0] = [
-                    'sample2', 
-                    'tumor2', 
-                    'normal2',
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-                    []
+                    'test',
+                    'testT',
+                    'testN',
+                    file('${params.test_data}/test.tumor-pileups.table'),
+                    file('${params.test_data}/test.empty-normal-pileups.table')
                 ]
                 """
             }
@@ -57,16 +64,16 @@ nextflow_process {
             assert process.success
             assert process.out.size() == 1
 
-            with(process.out[0]) {
+            def output_tuple = process.out[0][0]
+
+            with(output_tuple) {
                 assert size() == 5
-                assert get(0) == 'sample2'
-                assert get(1) == 'tumor2'
-                assert get(2) == 'normal2'
-                assert get(3).name == 'sample2.contamination.table'
-                assert get(4).name == 'sample2.segments.table'
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.tumorOnly.contamination.table'
+                assert file(get(4)).name == 'test.tumorOnly.segments.table'
             }
         }
-
     }
-
 }

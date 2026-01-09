@@ -21,6 +21,10 @@ jobs:
           - name: "GET_PILEUP_SUMMARIES"
             image: "broadinstitute/gatk:4.2.0.0"
             test: "tests/mutation_calling/modules/mutect2/get_pileup_summaries.nf.test"
+
+          - name: "CALCULATE_CONTAMINATION"
+            image: "broadinstitute/gatk:4.2.0.0"
+            test: tests/mutation_calling/modules/mutect2/calculate_contaminations.nf.test"
     
     runs-on: ubuntu-latest
 

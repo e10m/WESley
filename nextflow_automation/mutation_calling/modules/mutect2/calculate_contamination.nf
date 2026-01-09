@@ -16,27 +16,21 @@ process CALCULATE_CONTAMINATION {
     tuple val(sample_id), val(tumor_id), val(normal_id), path(tumor_pileups), path(normal_pileups)
 
     output:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.contamination.table"), path("${sample_id}.segments.table")
+    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.*.contamination.table"), path("${sample_id}*segments.table")
 
     script:
-    def is_paired = normal_pileups.name != "${sample_id}.normal-pileups.table" || normal_pileups.size() > 0
-    def contamination_cmd = is_paired ?
-        """
-        gatk CalculateContamination \\
-            -I ${tumor_pileups} \\
-            -matched ${normal_pileups} \\
-            -O ${sample_id}.contamination.table \\
-            --tumor-segmentation ${sample_id}.segments.table
-        """ :
-        """
-        gatk CalculateContamination \\
-            -I ${tumor_pileups} \\
-            -O ${sample_id}.contamination.table
-        
-        touch ${sample_id}.segments.table
-        """
+    // Change arguments based on paired vs. tumor-only mode
+    def normal_args = (normal_pileups.size() > 0 ?
+        "-matched ${normal_pileups}" : "")
+
+    def output_name = (normal_args ? "${sample_id}.paired.contamination.table" : "${sample_id}.tumorOnly.contamination.table")
+    def segment_output = (normal_args ? "${sample_id}.paired.segments.table" : "${sample_id}.tumorOnly.segments.table")
     
     """
-    ${contamination_cmd}
+    gatk CalculateContamination \\
+        -I ${tumor_pileups} \\
+        --tumor-segmentation $segment_output \\
+        -O $output_name \\
+        ${normal_args}
     """
 }
