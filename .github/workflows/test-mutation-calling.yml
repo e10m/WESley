@@ -26,6 +26,14 @@ jobs:
             image: "broadinstitute/gatk:4.2.0.0"
             test: "tests/mutation_calling/modules/mutect2/calculate_contamination.nf.test"
     
+          - name: "LEARN_READ_ORIENTATION"
+            image: "broadinstitute/gatk:4.2.0.0"
+            test: "tests/mutation_calling/modules/mutect2/learn_read_orientation.nf"
+
+          - name: "FILTER_MUTECT_CALLS"
+            image: "broadinstitute/gatk:4.2.0.0"
+            test: "tests/mutation_calling/modules/mutect2/filter_mutect_calls.nf"
+            
     runs-on: ubuntu-latest
 
     name: Test ${{ matrix.name }}

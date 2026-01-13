@@ -16,7 +16,7 @@ process MUTECT2_CALL {
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam), path(normal_bai)
 
     output:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2.*.vcf"), path("${sample_id}.f1r2.tar.gz")
+    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2.*.vcf"), path("${sample_id}.f1r2.tar.gz"), path("${sample_id}*stats")
 
     script:
     // change arguments based on tumor-only vs. paired calling

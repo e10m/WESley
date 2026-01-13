@@ -35,12 +35,13 @@ nextflow_process {
             assert process.out.size() == 1
 
             with(process.out[0][0]) {
-                assert size() == 5
+                assert size() == 6
                 assert get(0) == 'test'
                 assert get(1) == 'testT'
                 assert get(2) == 'testN'
                 assert file(get(3)).name == 'test.mutect2.paired.vcf'
                 assert file(get(4)).name == 'test.f1r2.tar.gz'
+                assert file(get(5)).name == 'test.mutect2.paired.vcf.stats'
             }
         }
     }
@@ -75,12 +76,13 @@ nextflow_process {
             assert process.out.size() == 1
 
             with(process.out[0][0]) {
-                assert size() == 5
+                assert size() == 6
                 assert get(0) == 'test'
                 assert get(1) == 'testT'
                 assert get(2) == 'testN'
                 assert file(get(3)).name == 'test.mutect2.tumorOnly.vcf'
                 assert file(get(4)).name == 'test.f1r2.tar.gz'
+                assert file(get(5)).name == 'test.mutect2.tumorOnly.vcf.stats'
             }
         }
 

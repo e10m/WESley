@@ -13,22 +13,24 @@ process FILTER_MUTECT_CALLS {
     memory '3.GB'
     
     input:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path(orientation_model), path(contamination_table), path(segments_table)
+    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path(orientation_model), path(m2_stats), path(contamination_table), path(segments_table)
 
     output:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2.filtered.vcf")
+    tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2*filtered.vcf")
 
     script:
-    def segments_arg = segments_table.name != "${sample_id}.segments.table" || segments_table.size() > 0 ?
-        "--tumor-segmentation ${segments_table}" : ""
+    def ref_genome = (params.test_mode ? "hg38_chr22.fasta" : "Homo_sapiens_assembly38.fasta")
+    def output_name = (unfiltered_vcf =~ /paired/ ? "${sample_id}.mutect2.paired.filtered.vcf" : "${sample_id}.mutect2.tumorOnly.filtered.vcf")
     
     """
     gatk FilterMutectCalls \\
-        -V ${unfiltered_vcf} \\
-        -R /references/Homo_sapiens_assembly38.fasta \\
+        -V $unfiltered_vcf \\
+        -O $output_name \\
+        -R "/references/${ref_genome}" \\
         --contamination-table ${contamination_table} \\
-        ${segments_arg} \\
+        --tumor-segmentation ${segments_table} \\
         --orientation-bias-artifact-priors ${orientation_model} \\
-        -O ${sample_id}.mutect2.filtered.vcf
+        -stats $m2_stats \\
+        --filtering-stats "${sample_id}.filter.stats"
     """
 }

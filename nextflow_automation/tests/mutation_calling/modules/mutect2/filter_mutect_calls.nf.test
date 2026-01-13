@@ -5,19 +5,26 @@ nextflow_process {
     process "FILTER_MUTECT_CALLS"
     config "../../../shared-test.config"
 
-    test("Should filter variants with contamination and orientation data") {
+    test("Should filter paired mutect2 variant calls w/o failing") {
 
         when {
+            params {
+                test_data = "${projectDir}/test-data"
+                references = "${projectDir}/test-data/references"
+                test_mode = true
+            }
+
             process {
                 """
                 input[0] = [
-                    'sample1', 
-                    'tumor1', 
-                    'normal1',
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test2.paired_end.sorted.bam'),
-                    file('${projectDir}/../test-data/recal-tables/test.baserecalibrator.table')
+                    'test', 
+                    'testT', 
+                    'testN',
+                    file('${params.test_data}/vcfs/test.mutect2.paired.vcf'),
+                    file('${params.test_data}/read-orientation/test.read-orientation-model.tar.gz'),
+                    file('${params.test_data}/m2-stats/test.mutect2.paired.vcf.stats'),
+                    file('${params.test_data}/contamination-tables/test.paired.contamination.table'),
+                    file('${params.test_data}/contamination-tables/test.paired.segments.table')
                 ]
                 """
             }
@@ -27,12 +34,12 @@ nextflow_process {
             assert process.success
             assert process.out.size() == 1
 
-            with(process.out[0]) {
+            with(process.out[0][0]) {
                 assert size() == 4
-                assert get(0) == 'sample1'
-                assert get(1) == 'tumor1'
-                assert get(2) == 'normal1'
-                assert get(3).name == 'sample1.mutect2.filtered.vcf'
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.mutect2.paired.filtered.vcf'
             }
         }
 
@@ -41,16 +48,22 @@ nextflow_process {
     test("Should handle tumor-only filtering") {
 
         when {
+            params {
+                test_data = "${projectDir}/test-data"
+                references = "${projectDir}/test-data/references"
+                test_mode = true
+            }
             process {
                 """
                 input[0] = [
-                    'sample2', 
-                    'tumor2', 
-                    'normal2',
-                    file('${projectDir}/../test-data/bams/chr20/dummy_L001.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test.paired_end.sorted.bam'),
-                    file('${projectDir}/../test-data/bams/chr22/test2.paired_end.sorted.bam'),
-                    []
+                    'test', 
+                    'testT', 
+                    'testN',
+                    file('${params.test_data}/vcfs/test.mutect2.tumorOnly.vcf'),
+                    file('${params.test_data}/read-orientation/test.read-orientation-model.tar.gz'),
+                    file('${params.test_data}/m2-stats/test.mutect2.tumorOnly.vcf.stats'),
+                    file('${params.test_data}/contamination-tables/test.tumorOnly.contamination.table'),
+                    file('${params.test_data}/contamination-tables/test.tumorOnly.segments.table')
                 ]
                 """
             }
@@ -60,12 +73,12 @@ nextflow_process {
             assert process.success
             assert process.out.size() == 1
 
-            with(process.out[0]) {
+            with(process.out[0][0]) {
                 assert size() == 4
-                assert get(0) == 'sample2'
-                assert get(1) == 'tumor2'
-                assert get(2) == 'normal2'
-                assert get(3).name == 'sample2.mutect2.filtered.vcf'
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.mutect2.tumorOnly.filtered.vcf'
             }
         }
 

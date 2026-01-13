@@ -125,13 +125,13 @@ workflow {
     mutect2_calls = MUTECT2_CALL(bams)
     pileup_summaries = GET_PILEUP_SUMMARIES(bams)
     contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
-    orientation_models = LEARN_READ_ORIENTATION()
+    orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
     
     // join contamination and orientation data for filtering
     filter_input = orientation_models
         .join(contamination_data, by: [0, 1, 2])
-        .map { sample_id, tumor_id, normal_id, unfiltered_vcf, orientation_model, contamination_table, segments_table ->
-            tuple(sample_id, tumor_id, normal_id, unfiltered_vcf, orientation_model, contamination_table, segments_table)
+        .map { sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table ->
+            tuple(sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table)
         }
     
     mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input)

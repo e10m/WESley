@@ -13,10 +13,10 @@ process LEARN_READ_ORIENTATION {
     memory '2.GB'
     
     input:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path(f1r2_tar)
+    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path(f1r2_tar), path(m2_stats)
 
     output:
-    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path("${sample_id}.read-orientation-model.tar.gz")
+    tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path("${sample_id}.read-orientation-model.tar.gz"), path(m2_stats)
 
     script:
     """
