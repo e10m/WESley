@@ -28,12 +28,12 @@ jobs:
     
           - name: "LEARN_READ_ORIENTATION"
             image: "broadinstitute/gatk:4.2.0.0"
-            test: "tests/mutation_calling/modules/mutect2/learn_read_orientation.nf"
+            test: "tests/mutation_calling/modules/mutect2/learn_read_orientation.nf.test"
 
           - name: "FILTER_MUTECT_CALLS"
             image: "broadinstitute/gatk:4.2.0.0"
-            test: "tests/mutation_calling/modules/mutect2/filter_mutect_calls.nf"
-            
+            test: "tests/mutation_calling/modules/mutect2/filter_mutect_calls.nf.test"
+
     runs-on: ubuntu-latest
 
     name: Test ${{ matrix.name }}
