@@ -10,9 +10,9 @@ VEP Cache Version: 103.
 
 process VEP {
     tag "${sample_id}"
-    publishDir "${params.base_dir}/mutation_calls/mutect2/vep_annotated_vcfs", mode: 'copy', pattern: "*mutect2*vep.vcf*"
-    publishDir "${params.base_dir}/mutation_calls/MuSE/vep_annotated_vcfs", mode: 'copy', pattern: "*MuSE*vep.vcf*"
-    publishDir "${params.base_dir}/mutation_calls/varscan2/vep_annotated_vcfs", mode: 'copy', pattern: "*varscan2*vep.vcf*"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/vep_annotated_vcfs", mode: 'copy', pattern: "*mutect2*vep.vcf*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/vep_annotated_vcfs", mode: 'copy', pattern: "*MuSE*vep.vcf*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/vep_annotated_vcfs", mode: 'copy', pattern: "*varscan2*vep.vcf*"
     cpus 1
 
     input:

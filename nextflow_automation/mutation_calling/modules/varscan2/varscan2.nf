@@ -10,8 +10,8 @@ VarScan Version: v2.4.3
 
 process VARSCAN2 {
     tag "${sample_id}"
-    publishDir "${params.base_dir}/mutation_calls/varscan2/filtered_vcfs", mode: 'copy', pattern: "*.Somatic.hc.vcf"
-    publishDir "${params.base_dir}/mutation_calls/varscan2/misc_vcfs", mode: 'copy', pattern: "*.{indel,snp}*.vcf"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/filtered_vcfs", mode: 'copy', pattern: "*.Somatic.hc.vcf"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/misc_vcfs", mode: 'copy', pattern: "*.{indel,snp}*.vcf"
     cpus 1
 
     input:

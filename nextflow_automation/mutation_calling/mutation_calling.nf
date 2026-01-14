@@ -26,28 +26,29 @@ workflow {
         help = """Usage:
 
         The typical command for running the pipeline is as follows:
-        
-        nextflow -C <CONFIG_PATH> run mutation_calling.nf --base_dir <PATH> --ref_dir <PATH> --metadata <PATH> --app_dir <PATH> [OPTIONS]
-        
+
+        nextflow -C <CONFIG_PATH> run mutation_calling.nf --output_dir <PATH> --ref_dir <PATH> --metadata <PATH> --interval_list <PATH> [OPTIONS]
+
         Required arguments:
-        --base_dir                    Path to the base directory containing input data
+        --output_dir                  Path to the output directory for results
         --ref_dir                     Path to the reference directory
         --metadata                    Path to the metadata sheet created by 'make_mc_metasheet.py'
-        --app_dir                     Path to the app directory containing additional scripts and .jar files
-        
+        --interval_list               Path to interval list file for targeted analysis
+
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
+        --test_mode                   Enable test mode with reduced dataset (default: false)
         --help                        Show this help message and exit
-        
+
         Examples:
-        
+
         # Basic usage with required parameters
         nextflow -C nextflow.config \
             run mutation_calling.nf \
-            --base_dir /path/to/data \
+            --output_dir /path/to/data \
             --ref_dir /path/to/reference \
             --metadata /path/to/metadata \
-            --app_dir /path/to/app
+            --interval_list /path/to/interval_list
         """
 
         // Print the help and exit
@@ -56,8 +57,8 @@ workflow {
     }
 
     // Parameter validation
-    if (!params.base_dir) {
-        error "ERROR: --base_dir parameter is required"
+    if (!params.output_dir) {
+        error "ERROR: --output_dir parameter is required"
         exit 1
     }
 
@@ -71,8 +72,8 @@ workflow {
         exit 1
     }
 
-    if (!params.app_dir) {
-        error "ERROR: --app_dir parameter is required"
+    if (!params.interval_list) {
+        error "ERROR: --interval_list parameter is required"
         exit 1
     }
 

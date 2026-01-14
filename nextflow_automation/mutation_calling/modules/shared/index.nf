@@ -7,9 +7,9 @@
 
 process INDEX {
     tag "${sample_id}"
-    publishDir "${params.base_dir}/mutation_calls/mutect2/raw-vcfs", mode: 'copy', pattern: "*mutect2*vcf*"
-    publishDir "${params.base_dir}/mutation_calls/varscan2/raw-vcfs", mode: 'copy', pattern: "*varscan2*vcf*"
-    publishDir "${params.base_dir}/mutation_calls/MuSE/raw-vcfs", mode: 'copy', pattern: "*MuSE*vcf*"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/raw-vcfs", mode: 'copy', pattern: "*mutect2*vcf*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/raw-vcfs", mode: 'copy', pattern: "*varscan2*vcf*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/raw-vcfs", mode: 'copy', pattern: "*MuSE*vcf*"
     cpus params.cpus
 
     input:

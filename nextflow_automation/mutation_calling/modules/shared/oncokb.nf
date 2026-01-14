@@ -9,9 +9,9 @@ Oncokb Version: 3.0.0.
 
 process ONCOKB {
     tag "${sample_id}"
-    publishDir "${params.base_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*vep.nonsynonymous*"
-    publishDir "${params.base_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*vep.nonsynonymous*"
-    publishDir "${params.base_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*vep.nonsynonymous*"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*vep.nonsynonymous*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*vep.nonsynonymous*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*vep.nonsynonymous*"
     cpus 1
     secret 'ONCOKB_API_KEY'
 
