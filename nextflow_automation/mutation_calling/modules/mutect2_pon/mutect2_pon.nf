@@ -18,7 +18,7 @@ process MUTECT2_PON {
     tuple val(sample_id), path(normal_bam), path(normal_bai)
 
     output:
-    tuple val(sample_id), path("*vcf*")
+    path("*vcf*")
 
     script:
     """
