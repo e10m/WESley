@@ -74,7 +74,7 @@ def log_workflow() {
 
 
 def parameter_validation() {
-    // Parameter validation
+    // Parameter validation (shared across workflows)
     if (!params.output_dir) {
         error "ERROR: --output_dir parameter is required"
         exit 1
@@ -82,11 +82,6 @@ def parameter_validation() {
 
     if (!params.ref_dir) {
         error "ERROR: --ref_dir parameter is required"
-        exit 1
-    }
-
-    if (!params.metadata) {
-        error "ERROR: --metadata parameter is required"
         exit 1
     }
 
@@ -106,6 +101,10 @@ workflow MUTATION_CALLING {
     }
     // validate parameters
     parameter_validation()
+    if (!params.metadata) {
+        error "ERROR: --metadata parameter is required"
+        exit 1
+    }
 
     // logging workflow details
     log_workflow()

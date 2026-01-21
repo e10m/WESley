@@ -4,6 +4,28 @@
 **WESley** is a modular [Nextflow](https://www.nextflow.io/) pipeline designed for analyzing **whole exome sequencing (WES)** data. It automates **data preprocessing**, **somatic mutation calling**, and **copy number variation (CNV)** analysis from raw FASTQ files of patient-derived tumor samples. The pipeline maintains HIPAA-compliance and reinforces reproducible workflows to support ongoing neuro-oncology research at UCLA.
 
 ---
+
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+- [Workflow Diagrams](#workflow-diagrams)
+- [How To Run](#how-to-run-data-processing)
+  - [Data Processing](#how-to-run-data-processing)
+  - [Mutation Calling](#how-to-run-mutation-calling)
+  - [Create Mutect2 PON](#how-to-run-mutation_callingnfcreate_m2_pon)
+  - [CNV Calling](#how-to-run-cnvkitnfcnv_calling)
+  - [Create CNVKit Normal](#how-to-run-cnvkitnfcreate_norm)
+  - [Consensus Calling](#how-to-run-consensus-calling)
+- [Docker & Containerization](#docker--containerization)
+- [Requirements](#requirements)
+- [Testing & CI/CD](#testing--cicd)
+- [Outputs](#outputs)
+- [Troubleshooting](#troubleshooting)
+- [Contributors](#contributors)
+
+</details>
+
+---
 ## Workflow Diagrams
 ### Data Processing
 ![Data Processing](./diagrams/data-processing.png)
@@ -88,7 +110,7 @@ python make_mc_metasheet.py \
 | -o, --output_dir | Output directory for the generated TSV metadata file |
 | -m, --metadata | Path to sequencing metadata sheet (Excel .xlsx) |
 
-### 2. Run Mutation Calling:
+### 2. Run Mutation Calling (mutation_calling.nf:mutation_calling):
 
 ```bash
 # Set OncoKB API token via Nextflow secrets (only needs to be used once)
@@ -96,6 +118,7 @@ nextflow secrets set ONCOKB_API_KEY "your_actual_API_token"
 
 # Run the pipeline
 nextflow run mutation_calling.nf --with-docker -with-trace \
+-entry "MUTATION_CALLING" \
 --output_dir "/path/to/batch-18/results" \
 --ref_dir "/path/to/references" \
 --metadata "/path/to/batch-18/metadata/batch18_mc_metasheet.tsv" \
@@ -117,6 +140,37 @@ nextflow run mutation_calling.nf --with-docker -with-trace \
 | `--test_mode`    | No       | Enable test mode with reduced dataset (default: false) |
 
 **Note:** The `--batch_number` parameter is only used by the metadata generation script (`make_mc_metasheet.py`), not by the mutation calling workflow itself. The workflow relies on Docker images with pre-installed tools at `/app`, so no `--app_dir` parameter is needed.
+
+## How To Run (mutation_calling.nf:CREATE_M2_PON)
+
+This workflow creates a Mutect2 Panel of Normals (PON) from normal samples. The PON is used to filter out technical artifacts and germline variants during somatic mutation calling.
+
+**Recommended:** Use at least 40 normal samples for robust PON creation.
+
+```bash
+nextflow -C "nextflow.config" \
+    run "mutation_calling.nf" \
+    -entry "CREATE_M2_PON" \
+    -with-trace -with-docker \
+    --output_dir "/path/to/output" \
+    --ref_dir "/path/to/references" \
+    --normal_dir "/path/to/normal/bams" \
+    --interval_list "seqcap_hg38_capture_targets.interval_list"
+```
+
+**Workflow Parameters:**
+
+| Flag             | Required | Description |
+|------------------|----------|-------------|
+| `--output_dir`   | Yes      | Output directory for PON files |
+| `--ref_dir`      | Yes      | Directory containing reference genomes |
+| `--normal_dir`   | Yes      | Directory containing normal BAM files (with .bai indices) |
+| `--interval_list`| Yes      | Interval list file name (located in ref_dir) |
+| `--cpus`         | No       | Number of CPUs to allocate (default: 30) |
+
+**Output:**
+- `{interval_list_basename}.pon.vcf.gz` - Panel of Normals VCF
+- `{interval_list_basename}.pon.vcf.gz.tbi` - VCF index
 
 ## How To Run (cnvkit.nf:CNV_CALLING)
 
@@ -198,6 +252,40 @@ nextflow run consensus_calling.nf --with-docker -with-trace \
 | `--cpus`         | Number of CPUs to allocate for each process |
 | `--batch_number` | Batch number |
 
+## Docker & Containerization
+
+WESley uses Docker containers to ensure reproducible, isolated analysis environments. The pipeline leverages a mix of public [BioContainers](https://biocontainers.pro/) images and custom-built images.
+
+### Setup
+```bash
+# Pull all Docker images (one-time setup)
+cd containerization/
+docker compose pull
+```
+
+### Container Overview
+
+| Workflow | Key Containers |
+|----------|----------------|
+| Data Processing | `broadinstitute/gatk:4.2.0.0`, `e10m/bwa-and-samtools`, `biocontainers/fastqc`, `multiqc/multiqc` |
+| Mutation Calling | `broadinstitute/gatk:4.2.0.0`, `quay.io/biocontainers/muse`, `e10m/varscan2`, `e10m/vep`, `e10m/oncokb` |
+| CNV Calling | `quay.io/biocontainers/cnvkit:0.9.10` |
+| Consensus Calling | `e10m/vep`, `e10m/oncokb`, `e10m/vcf2maf`, `staphb/bcftools` |
+
+### Custom Images
+Custom Dockerfiles are located in `containerization/dockerfiles/` for tools requiring specific configurations:
+- **bwa-and-samtools** - Combined BWA 0.7.17 + SAMtools 1.10
+- **vep** - Ensembl VEP with pre-cached GRCh38 variant databases
+- **oncokb** - OncoKB annotator v3.0.0
+- **vcf2maf** - VCF-to-MAF conversion tools
+- **varscan2** - VarScan v2.4.3 with Java runtime
+
+### Volume Mounting
+All workflows mount the reference directory at `/references` inside containers. This is configured automatically via `nextflow.config`:
+```groovy
+containerOptions = "-v ${params.ref_dir}:/references"
+```
+
 ## Requirements
 
 ### System Requirements
@@ -265,13 +353,51 @@ nextflow run consensus_calling.nf --with-docker -with-trace \
   - conda install bioconda::nextflow=24.10.5
   - conda install conda-forge::docker
 - FASTQ files need to be compressed (.gz)
-- Install cromwell-60.jar, gatk-package-4.2.0.0-local.jar, and mutect2.wdl in `$app_dir`
 - Pull all Docker images
   - `$ cd containerization/`
   - `$ docker compose pull`
 
 ### Resource Management
 The pipeline automatically scales resource allocation based on available system resources. Monitor system usage during execution and adjust `--cpus` parameter as needed.
+
+## Testing & CI/CD
+
+### nf-test Framework
+WESley uses [nf-test](https://www.nf-test.com/) for module-level unit testing. Tests validate individual process functionality before integration into complete workflows.
+
+**Running Tests Locally:**
+```bash
+# All commands must be run from nextflow_automation/ directory
+cd nextflow_automation
+
+# List all available tests
+nf-test list
+
+# Run specific test
+nf-test test tests/data_processing/modules/align.nf.test
+
+# Run all data processing tests
+nf-test test tests/data_processing/modules/*.nf.test
+
+# Run all mutation calling tests
+nf-test test tests/mutation_calling/modules/mutect2/*.nf.test
+```
+
+**Test Organization:**
+- Configuration: `nextflow_automation/nf-test.config`
+- Shared settings: `tests/shared-test.config`
+- Test data: `nextflow_automation/test-data/`
+
+### GitHub Actions CI/CD
+Three workflows automatically validate code on pull requests:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **Nextflow Linter** | PRs to main | Validates code style and Nextflow best practices |
+| **Data Processing Tests** | PRs & branch pushes | Tests 7 modules (TRIM, FASTQC, BWA_ALIGN, MARK_DUPES, SET_TAGS, RECAL_BASES, APPLY_BQSR) |
+| **Mutation Calling Tests** | PRs & branch pushes | Tests 5 Mutect2 modules (MUTECT2_CALL, GET_PILEUP_SUMMARIES, CALCULATE_CONTAMINATION, LEARN_READ_ORIENTATION, FILTER_MUTECT_CALLS) |
+
+Tests run in parallel using GitHub Actions matrix strategy for faster CI/CD execution.
 
 ## Outputs
 
@@ -333,8 +459,6 @@ base_dir/
 ### Logs
 All execution logs and resource usage reports:
 - `trace.txt` - Detailed execution trace with resource usage
-- `timeline.html` - Interactive execution timeline
-- `report.html` - Comprehensive pipeline execution report
 - `nextflow.log` - Main pipeline log file
 
 ## Troubleshooting
@@ -348,7 +472,7 @@ All execution logs and resource usage reports:
     - `ls -al`: Check for all files in the work directory
 3. Validate input metadata format matches expected schema
 4. Ensure Docker containers can access mounted directories
-5. Ensure `reference` and `app` folders are downloaded and accessible via Nextflow params
+5. Ensure `reference` folder is downloaded and accessible via Nextflow params
 
 ## Contributors
 - **Dien Ethan Mach** - Pipeline development and maintenance
