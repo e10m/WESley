@@ -1,0 +1,52 @@
+nextflow_process {
+    name "Test Process MARK_DUPES"
+    script "../../../data_processing/modules/mark_duplicates.nf"
+    process "MARK_DUPES"
+    config "../../shared-test.config"
+
+    test("Should mark the duplicates without failures") {
+
+        when {
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
+            }
+            process {
+                """
+                input[0] = [
+                    'test',
+                    [ 
+                        file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true), 
+                        file("${params.test_data}/bams/chr22/test2.paired_end.sorted.bam", checkIfExists: true)
+                    ]
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            println("\n* Duplicates marked successfully")
+
+            with(process.out.mark_dupe_bams) {
+                def outputs = get(0)  // directly access output tuple
+
+                assert outputs.size() == 3
+                println("\n* 3 items in output tuple")
+
+                def (sample_id, bam, bai) = outputs
+
+                assert sample_id == 'test'
+                println("\n* Sample ID is outputted correctly")
+
+                assert path(bam.toString()).exists()
+                assert path(bai.toString()).exists()
+                println("\n* All files found and exist")
+
+                
+            }
+        }
+
+    }
+
+}

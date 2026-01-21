@@ -1,0 +1,52 @@
+nextflow_process {
+
+    name "Test Process TRIM"
+    script "../../../data_processing/modules/trim_adapters.nf"
+    process "TRIM"
+    config "../../shared-test.config"
+    config "../../../data_processing/nextflow.config"
+
+    test("Should trim FASTQs without failures") {
+
+        when {
+            params{
+                test_data = "${projectDir}/test-data"
+                ref_dir = "${params.test_data}/references"
+                test_mode = true
+            }
+            process {
+                """
+                input[0] = [
+                    'dummy',
+                    'L001',
+                    file("${params.test_data}/fastqs/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/fastqs/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    'illumina_novaseq_x',
+                    'tcgb',
+                    false
+                ]
+                """
+            }
+        }
+
+        then {
+            // check the process succeeded without error messages
+            assert process.success
+
+            // check outputs
+            with(process.out.trimmed_fastqs) {
+                def output_tuple = get(0)  // directly access the first emission
+                assert output_tuple.size() == 7  // verify tuple size of 7
+                
+                def (sample_id, lane, fastq_1, fastq_2, platform, seq_center, mouse_flag) = output_tuple
+                
+                // verify files exist
+                assert path(fastq_1).exists()
+                assert file(fastq_1).name == 'dummy_L001_val_1.fq.gz'
+
+                assert path(fastq_2).exists()
+                assert file(fastq_2).name == 'dummy_L001_val_2.fq.gz'
+            }
+        }
+    }
+}

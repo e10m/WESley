@@ -1,0 +1,79 @@
+nextflow_process {
+
+    name "Test Process CALCULATE_CONTAMINATION"
+    script "../../../../mutation_calling/modules/mutect2/calculate_contamination.nf"
+    process "CALCULATE_CONTAMINATION"
+    config "../../../shared-test.config"
+
+    test("Should run paired mode with pileup tables") {
+        when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/pileups"
+            }
+            process {
+                """
+                input[0] = [
+                    'test', 
+                    'testT', 
+                    'testN',
+                    file('${params.test_data}/test.tumor-pileups.table'),
+                    file('${params.test_data}/test.normal-pileups.table')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            def output_tuple = process.out[0][0]
+
+            with(output_tuple) {
+                assert size() == 5
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.paired.contamination.table'
+                assert file(get(4)).name == 'test.paired.segments.table'
+            }
+        }
+    }
+
+    test("Should run tumor-only mode") {
+        when {
+            params {
+                test_mode = true
+                test_data = "${projectDir}/test-data/pileups"
+            }
+            process {
+                """
+                input[0] = [
+                    'test',
+                    'testT',
+                    'testN',
+                    file('${params.test_data}/test.tumor-pileups.table'),
+                    file('${params.test_data}/test.empty-normal-pileups.table')
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            assert process.out.size() == 1
+
+            def output_tuple = process.out[0][0]
+
+            with(output_tuple) {
+                assert size() == 5
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.tumorOnly.contamination.table'
+                assert file(get(4)).name == 'test.tumorOnly.segments.table'
+            }
+        }
+    }
+}

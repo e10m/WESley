@@ -1,84 +1,66 @@
 nextflow.enable.dsl=2
 
 // import modules
-include { MAKE_JSON } from './modules/make_json.nf'
-include { PILEUP } from './modules/pileup.nf'
-include { MUTECT2 } from './modules/mutect2.nf'
-include { MUSE } from './modules/muse.nf'
-include { VARSCAN2 } from './modules/varscan2.nf'
-include { INDEX } from './modules/index.nf'
-include { MERGE_VCFS } from './modules/merge_vcf.nf'
-include { SELECT_VARIANTS } from './modules/select_variants.nf'
-include { VEP } from './modules/vep.nf'
-include { REHEADER } from './modules/reheader.nf'
-include { CREATE_MAF } from './modules/create_maf.nf'
-include { KEEP_NONSYNONYMOUS } from './modules/keep_nonsynonymous.nf'
-include { RENAME_HG38 } from './modules/rename_hg38.nf'
-include { ONCOKB } from './modules/oncokb.nf'
+include { PILEUP } from './modules/varscan2/pileup.nf'
+include { MUSE } from './modules/muse/muse.nf'
+include { VARSCAN2 } from './modules/varscan2/varscan2.nf'
+include { MUTECT2_CALL } from './modules/mutect2/mutect2_call.nf'
+include { GET_PILEUP_SUMMARIES } from './modules/mutect2/get_pileup_summaries.nf'
+include { CALCULATE_CONTAMINATION } from './modules/mutect2/calculate_contamination.nf'
+include { LEARN_READ_ORIENTATION } from './modules/mutect2/learn_read_orientation.nf'
+include { FILTER_MUTECT_CALLS } from './modules/mutect2/filter_mutect_calls.nf'
+include { INDEX } from './modules/shared/index.nf'
+include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
+include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
+include { VEP } from './modules/shared/vep.nf'
+include { REHEADER } from './modules/shared/reheader.nf'
+include { CREATE_MAF } from './modules/shared/create_maf.nf'
+include { KEEP_NONSYNONYMOUS } from './modules/shared/keep_nonsynonymous.nf'
+include { RENAME_HG38 } from './modules/shared/rename_hg38.nf'
+include { ONCOKB } from './modules/shared/oncokb.nf'
+include { MUTECT2_PON } from './modules/mutect2_pon/mutect2_pon.nf'
+include { GENOMICS_DB_IMPORT } from './modules/mutect2_pon/genomics_db_import.nf'
+include { CREATE_PON } from './modules/mutect2_pon/create_pon.nf'
 
-// main workflow
-workflow {
-    // Show help message if requested
-    if (params.help) {
-        help = """Usage:
 
-        The typical command for running the pipeline is as follows:
-        
-        nextflow -C <CONFIG_PATH> run mutation_calling.nf --base_dir <PATH> --ref_dir <PATH> --metadata <PATH> --app_dir <PATH> [OPTIONS]
-        
-        Required arguments:
-        --base_dir                    Path to the base directory containing input data
-        --ref_dir                     Path to the reference directory
-        --metadata                    Path to the metadata sheet created by 'make_mc_metasheet.py'
-        --app_dir                     Path to the app directory containing additional scripts and .jar files
-        
-        Optional arguments:
-        --cpus                        Number of CPUs to use for processing (default: 30)
-        --help                        Show this help message and exit
-        
-        Examples:
-        
-        # Basic usage with required parameters
-        nextflow -C nextflow.config \
-            run mutation_calling.nf \
-            --base_dir /path/to/data \
-            --ref_dir /path/to/reference \
-            --metadata /path/to/metadata \
-            --app_dir /path/to/app
-        """
+// define functions for user guidance
+def help_message() {
+    log.info """Usage:
 
-        // Print the help and exit
-        println(help)
-        exit(0)
-    }
+    The typical command for running the pipeline is as follows:
 
-    // Parameter validation
-    if (!params.base_dir) {
-        error "ERROR: --base_dir parameter is required"
-        exit 1
-    }
+    nextflow -C <CONFIG_PATH> run mutation_calling.nf --output_dir <PATH> --ref_dir <PATH> --metadata <PATH> --interval_list <PATH> [OPTIONS]
 
-    if (!params.ref_dir) {
-        error "ERROR: --ref_dir parameter is required"
-        exit 1
-    }
+    Required arguments:
+    --output_dir                  Path to the output directory for results
+    --ref_dir                     Path to the reference directory
+    --metadata                    Path to the metadata sheet created by 'make_mc_metasheet.py'
+    --interval_list               Path to interval list file for targeted analysis
 
-    if (!params.metadata) {
-        error "ERROR: --metadata parameter is required"
-        exit 1
-    }
+    Optional arguments:
+    --cpus                        Number of CPUs to use for processing (default: 30)
+    --test_mode                   Enable test mode with reduced dataset (default: false)
+    --help                        Show this help message and exit
 
-    if (!params.app_dir) {
-        error "ERROR: --app_dir parameter is required"
-        exit 1
-    }
+    Examples:
 
-    // workflow logging
+    # Basic usage with required parameters
+    nextflow -C nextflow.config \\
+        run mutation_calling.nf \\
+        -entry <WORKFLOW_NAME> \\
+        --output_dir /path/to/data \\
+        --ref_dir /path/to/reference \\
+        --metadata /path/to/metadata \\
+        --interval_list /path/to/interval_list
+    """.stripIndent()
+}
+
+def log_workflow() {
     log.info """\
- __     __     ______     ______     __         ______     __  __    
-/\\ \\  _ \\ \\   /\\  ___\\   /\\  ___\\   /\\ \\       /\\  ___\\   /\\ \\_\\ \\   
-\\ \\ \\/ ".\\ \\  \\ \\  __\\   \\ \\___  \\  \\ \\ \\____  \\ \\  __\\   \\ \\____ \\  
- \\ \\__/".~\\_\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\ 
+ __     __     ______     ______     __         ______     __  __
+/\\ \\  _ \\ \\   /\\  ___\\   /\\  ___\\   /\\ \\       /\\  ___\\   /\\ \\_\\ \\
+\\ \\ \\/ ".\\ \\  \\ \\  __\\   \\ \\___  \\  \\ \\ \\____  \\ \\  __\\   \\ \\____ \\
+ \\ \\__/".~\\_\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\
   \\/_/   \\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_____/
 =========================================================================================
     Workflow ran:       : ${workflow.manifest.name}
@@ -88,13 +70,47 @@ workflow {
     Container(s)        : ${workflow.containerEngine}:${workflow.container ?: 'None'}
     Nextflow Version    : ${workflow.manifest.nextflowVersion}
     """.stripIndent()
+}
 
-    ////////////////////////////
-    // Start of main workflow //
-    ////////////////////////////
+
+def parameter_validation() {
+    // Parameter validation (shared across workflows)
+    if (!params.output_dir) {
+        error "ERROR: --output_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+
+    if (!params.interval_list) {
+        error "ERROR: --interval_list parameter is required"
+        exit 1
+    }
+}
+
+
+// main workflow
+workflow MUTATION_CALLING {
+    // Show help message if requested
+    if (params.help) {
+        help_message()
+        exit(0)
+    }
+    // validate parameters
+    parameter_validation()
+    if (!params.metadata) {
+        error "ERROR: --metadata parameter is required"
+        exit 1
+    }
+
+    // logging workflow details
+    log_workflow()
     
     // channel in metadata and save as a set for downstream processes
-    Channel
+    channel
         .fromPath(params.metadata)
         .splitCsv(header: true, sep: '\t')
         .map { row ->
@@ -111,16 +127,28 @@ workflow {
         .set { bams }
 
     // split channels based on if normal is available
-    bams.branch {
-        paired: it[6] != []
-        tumor_only: it[6] == []
-    }.set { samples }
+    bams
+    .branch { row ->
+        paired: row[6] != []
+        tumor_only: row[6] == []
+    }
+    .set { samples }
 
-    // make metadata in JSON format
-    json = MAKE_JSON(bams)
-
-    // run the Mutect2 variant caller pipeline
-    mutect2_vcfs = MUTECT2(json)
+    // run Mutect2 steps defined by GATK best practices
+    mutect2_calls = MUTECT2_CALL(bams)
+    pileup_summaries = GET_PILEUP_SUMMARIES(bams)
+    contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
+    orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
+    
+    // join contamination and orientation data for filtering
+    filter_input = orientation_models
+        .join(contamination_data, by: [0, 1, 2])
+        .map { sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table ->
+            tuple(sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table)
+        }
+    
+    // filter Mutect2 calls
+    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input)
 
     // run MuSE variant caller
     muse_vcfs = MUSE(samples.paired)
@@ -158,4 +186,43 @@ workflow {
 
     // oncokb annotation for clinical relevance
     ONCOKB(renamed_files)
+}
+
+workflow CREATE_M2_PON {
+    // Show help message if requested
+    if (params.help) {
+        help_message()
+        exit(0)
+    }
+    // validate parameters
+    parameter_validation()
+    if (!params.normal_dir) {
+        error "ERROR: --normal_dir parameter is required"
+        exit 1
+    }
+
+    // logging workflow details
+    log_workflow()
+
+    // channel in the normal samples
+    channel.fromFilePairs([
+        "${params.normal_dir}/*.{bam,bam.bai}",
+        "${params.normal_dir}/**/*.{bam,bam.bai}"], flat: true)  // generate tuple [sample_id, bam, bai]
+    // extract sample ID from filename
+    .map { base_name, read1, read2 ->
+        def sample_id = base_name.tokenize('.')[0]  // string split, parse first element
+        tuple(sample_id, read1, read2) }
+    .set { normal_bams }
+
+    // main workflow
+    normal_vcfs = MUTECT2_PON(normal_bams)
+
+    // collect vcfs and pass to genomics_db_import
+    normal_vcfs
+        .collect()
+        .set { all_vcfs }
+
+    genomics_db = GENOMICS_DB_IMPORT(all_vcfs)
+    
+    CREATE_PON(genomics_db)
 }

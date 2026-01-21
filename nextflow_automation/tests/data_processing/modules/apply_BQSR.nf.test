@@ -1,0 +1,45 @@
+nextflow_process {
+
+    name "Test Process APPLY_BQSR"
+    script "../../../data_processing/modules/apply_BQSR.nf"
+    process "APPLY_BQSR"
+    config "../../shared-test.config"
+
+    test("Should apply BQSR to dummy BAMs without failures") {
+
+        when {
+            params {
+                test_data = "${projectDir}/test-data/"
+                ref_dir = "${params.test_data}/references"
+            }
+            process {
+                """
+                input[0] = [
+                    'test',
+                    file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true),
+                    file("${params.test_data}/recal-tables/test.baserecalibrator.table", checkIfExists: true)
+                ]
+                """
+            }
+        }
+
+        then {
+            assert process.success
+            println("\n* Process completed successfully; BQSR applied")
+
+            with(process.out.bqsr_bams) {
+                def (sample_id, bam, bai) = get(0)
+
+                assert get(0).size() == 3
+                println("\n* 3 items in output tuple")
+
+                assert sample_id == 'test'
+                println("\n* Sample ID is outputted correctly")
+
+                assert path(bam.toString()).exists()
+                assert path(bai.toString()).exists()
+                println("\n* All files found and exist")
+            }
+        }
+    }
+}
