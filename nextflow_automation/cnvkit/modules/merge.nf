@@ -5,8 +5,10 @@ This module merges all .seg files into a singular .seg file.
 */
 
 process MERGE {
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
     publishDir "${params.output_dir}/cnv_calling/merged_seg_files", mode: 'copy'
-    cpus 1
 
     input:
     path(seg_files)

@@ -8,9 +8,11 @@ CNVKit version: 0.9.10.
 */
 
 process SEGMENT {
+    label 'highCpu'
+    label 'medMem'
+    label 'medTime'
     tag "$sample_id"
     publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy'
-    cpus params.cpus
 
     input:
     tuple val(sample_id), path(cnr_file)
