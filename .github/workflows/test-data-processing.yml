@@ -51,5 +51,5 @@ jobs:
 
       - name: Run nf-test
         shell: bash -el {0}
-        working-directory: ./nextflow_automation/data_processing
+        working-directory: ./nextflow_automation/
         run: nf-test test ${{ matrix.test }}
