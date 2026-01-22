@@ -8,9 +8,9 @@ CNVKit version: 0.9.10.
 */
 
 process SEGMENT {
-    label 'highCpu'
+    label 'lowCpu'
     label 'medMem'
-    label 'medTime'
+    label 'shortTime'
     tag "$sample_id"
     publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy'
 
