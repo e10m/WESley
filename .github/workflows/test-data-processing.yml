@@ -52,4 +52,4 @@ jobs:
       - name: Run nf-test
         shell: bash -el {0}
         working-directory: ./nextflow_automation/data_processing
-        run: nf-test test --profile test ${{ matrix.test }}
+        run: nf-test test ${{ matrix.test }}
