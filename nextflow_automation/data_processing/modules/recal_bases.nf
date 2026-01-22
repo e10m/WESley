@@ -10,7 +10,9 @@ Python version: 3.6.10.
 
 process RECAL_BASES {
     tag "$sample_id"
-    cpus params.cpus
+    label 'highCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), path(tagged_bam), path(index)

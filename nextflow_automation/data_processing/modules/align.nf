@@ -10,7 +10,9 @@ BWA version: 0.7.17
 
 process BWA_ALIGN {
     tag "${sample_id}_${lane}"
-    cpus params.cpus
+    label 'highCpu'
+    label 'highMem'
+    label 'longTime'
 
     input:
     tuple val(sample_id), val(lane), path(trimmed_read_1), path(trimmed_read_2), val(platform), val(seq_center), val(mouse_flag)

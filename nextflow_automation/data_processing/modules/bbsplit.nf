@@ -11,8 +11,10 @@ BBMap version: BBMap version 38.06
 process SPLIT {
     tag "${sample_id}_${lane}"
     publishDir "${params.output_dir}/preprocessing/bbsplit", mode: 'copy', pattern: "*refstats.txt"
-    cpus params.cpus
-    
+    label 'highCpu'
+    label 'extraHighMem'
+    label 'extraLongTime'
+
     input:
     tuple val(sample_id), val(lane), path(contaminated_read1), path(contaminated_read2), val(platform), val(seq_center), val(mouse_flag)
     
