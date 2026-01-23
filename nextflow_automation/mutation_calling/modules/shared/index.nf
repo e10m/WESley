@@ -10,7 +10,9 @@ process INDEX {
     publishDir "${params.output_dir}/mutation_calls/mutect2/raw-vcfs", mode: 'copy', pattern: "*mutect2*vcf*"
     publishDir "${params.output_dir}/mutation_calls/varscan2/raw-vcfs", mode: 'copy', pattern: "*varscan2*vcf*"
     publishDir "${params.output_dir}/mutation_calls/MuSE/raw-vcfs", mode: 'copy', pattern: "*MuSE*vcf*"
-    cpus params.cpus
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(vcf_file)

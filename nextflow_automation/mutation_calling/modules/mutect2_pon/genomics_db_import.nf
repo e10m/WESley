@@ -11,9 +11,10 @@ GATK Version: 4.2.0.0
 
 process GENOMICS_DB_IMPORT {
     tag "${params.interval_list}"
-    cpus 1
-    memory '4.GB'
-    
+    label 'lowCpu'
+    label 'highMem'
+    label 'medTime'
+
     input:
     path(all_vcfs)
 

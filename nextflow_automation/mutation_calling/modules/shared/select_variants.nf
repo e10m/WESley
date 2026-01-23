@@ -9,8 +9,10 @@ GATK version: 4.2.0.0.
 
 process SELECT_VARIANTS {
     tag "${sample_id}"
-    cpus params.cpus
-    
+    label 'lowCpu'
+    label 'medMem'
+    label 'medTime'
+
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(compressed_vcf), path(index_file)
 

@@ -11,9 +11,10 @@ GATK Version: 4.2.0.0
 
 process MUTECT2_PON {
     tag "${sample_id}"
-    cpus 4
-    memory '4.GB'
-    
+    label 'lowCpu'
+    label 'medMem'
+    label 'extraLongTime'
+
     input:
     tuple val(sample_id), path(normal_bam), path(normal_bai)
 

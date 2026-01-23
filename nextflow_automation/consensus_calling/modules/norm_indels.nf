@@ -9,7 +9,10 @@ bcftools version 1.10.2
 
 process NORM_INDELS {
     tag "${sample_id}"
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
+
     input:
     tuple val(sample_id), path(consensus_vcf), path(consensus_index)
 

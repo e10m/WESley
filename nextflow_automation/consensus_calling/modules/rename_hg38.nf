@@ -8,7 +8,10 @@ Ubuntu version: 20.04.
 
 process RENAME_HG38 {
     tag "${sample_id}"
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
+
     input:
     tuple val(sample_id), path(nonsyno_maf)
 

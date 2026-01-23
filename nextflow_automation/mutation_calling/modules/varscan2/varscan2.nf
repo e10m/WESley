@@ -12,7 +12,9 @@ process VARSCAN2 {
     tag "${sample_id}"
     publishDir "${params.output_dir}/mutation_calls/varscan2/filtered_vcfs", mode: 'copy', pattern: "*.Somatic.hc.vcf"
     publishDir "${params.output_dir}/mutation_calls/varscan2/misc_vcfs", mode: 'copy', pattern: "*.{indel,snp}*.vcf"
-    cpus 1
+    label 'lowCpu'
+    label 'lowMem'
+    label 'extraLongTime'
 
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(pileup)
