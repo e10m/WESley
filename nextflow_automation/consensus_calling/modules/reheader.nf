@@ -9,7 +9,10 @@ bcftools version: 1.10.
 
 process REHEADER {
     tag "${sample_id}"
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
+
     input:
     tuple val(sample_id), path(mutect2_vcf), path(muse_vcf), path(varscan2_vcf)
     

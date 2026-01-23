@@ -9,7 +9,9 @@ Ubuntu version: 20.04.
 
 process KEEP_NONSYNONYMOUS {
     tag "${sample_id}"
-    cpus 1
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(maf_file)

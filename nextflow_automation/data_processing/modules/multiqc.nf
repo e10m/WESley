@@ -10,6 +10,9 @@ MultiQC version: v1.30.
 process MULTIQC {
     publishDir "${params.output_dir}/QC-${params.output_dir}", mode: 'copy'
     containerOptions "-v ${workflow.workDir}:/work"
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
 
     input:
     val "ready"

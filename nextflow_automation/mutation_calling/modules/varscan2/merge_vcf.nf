@@ -9,7 +9,9 @@ GATK Version: 4.2.0.0
 
 process MERGE_VCFS {
     tag "${sample_id}"
-    cpus 1
+    label 'medCpu'
+    label 'lowMem'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(snp_vcf), path(indel_vcf)

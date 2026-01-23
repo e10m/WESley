@@ -9,6 +9,9 @@ FastQC version: v0.11.9
 
 process FASTQC {
     tag "${sample_id}_${lane}"
+    label 'lowCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), val(lane), path(read1), path(read2), val(platform), val(seq_center), val(mouse_flag)
@@ -19,6 +22,6 @@ process FASTQC {
     script:
     """
     fastqc $read1 $read2 \
-    -t ${params.cpus}
+    -t ${task.cpus}
     """
 }

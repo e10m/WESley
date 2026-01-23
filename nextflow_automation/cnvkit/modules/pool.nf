@@ -8,8 +8,10 @@ CNVKit version: 0.9.10
 */
 
 process POOL {
+    label 'highCpu'
+    label 'highMem'
+    label 'longTime'
     publishDir "${params.ref_dir}/${params.capture_kit}/", mode: 'copy', pattern: "*pooled*normal*cnn"
-    cpus params.cpus
 
     input:
     path(normal_bam_list)

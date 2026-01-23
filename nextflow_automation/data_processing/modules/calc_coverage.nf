@@ -9,7 +9,9 @@ GATK Version: 4.2.0.0.
 
 process CALC_COVERAGE {
     tag "${sample_id}"
-    cpus 1
+    label 'lowCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), path(bam), path(bai)

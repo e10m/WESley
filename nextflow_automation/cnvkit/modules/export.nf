@@ -8,9 +8,11 @@ CNVKit version: 0.9.10.
 */
 
 process EXPORT {
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
     tag "$sample_id"
     publishDir "${params.output_dir}/cnv_calling/segmentation", mode: 'copy'
-    cpus 1
 
     input:
     tuple val(sample_id), path(cns_file)

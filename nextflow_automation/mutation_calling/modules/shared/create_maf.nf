@@ -9,7 +9,9 @@ vcf2maf.pl version: 1.6.17.
 
 process CREATE_MAF {
     tag "${sample_id}"
-    cpus 1
+    label 'lowCpu'
+    label 'lowMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), path(vcf)

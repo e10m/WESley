@@ -9,8 +9,10 @@ bcftools version: 1.10.
 
 process REHEADER {
     tag "${sample_id}"
-    cpus 1
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'shortTime'
+
     input:
     tuple val(sample_id), path(vcf)
     
