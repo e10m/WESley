@@ -82,7 +82,7 @@ def main():
     parser.add_argument('-d','--bam_dir', type=str, required=True,
                         help="Directory where the analysis ready BAM files are.")
 
-    parser.add_argument('-b', '--batch_name', type=int, required=True,
+    parser.add_argument('-b', '--batch_name', type=str, required=True,
                         help="Batch name for the WES data being analyzed.")
 
     parser.add_argument('-o', '--output_dir', default='./', type=str, required=True,
