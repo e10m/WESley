@@ -12,7 +12,9 @@ Python version: 3.6.10.
 
 process MARK_DUPES {
     tag "$sample_id"
-    cpus params.cpus
+    label 'highCpu'
+    label 'highMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), path(sorted_bams)

@@ -11,7 +11,9 @@ Python version: 3.6.10.
 process APPLY_BQSR {
     tag "$sample_id"
     publishDir "${params.output_dir}/preprocessing/analysis_ready_bams", mode: 'copy'
-    cpus params.cpus
+    label 'highCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), path(tagged_bam), path(recal_data_table)

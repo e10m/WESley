@@ -9,9 +9,10 @@ GATK Version: 4.2.0.0
 
 process GET_PILEUP_SUMMARIES {
     tag "${sample_id}"
-    cpus 2
-    memory '3.GB'
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'medTime'
+
     input:
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam), path(normal_bai)
 

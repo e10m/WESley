@@ -10,8 +10,11 @@ Oncokb Version: 3.0.0.
 process ONCOKB {
     tag "${sample_id}"
     publishDir "${params.base_dir}/mutation_calls/consensus/oncokb_annotation", mode: 'copy', pattern: "*vep.nonsynonymous.oncokb.maf"
+    label 'lowCpu'
+    label 'lowMem'
+    label 'medTime'
     secret 'ONCOKB_API_KEY'
-    
+
     input:
     tuple val(sample_id), path(nonsyno_maf)
 

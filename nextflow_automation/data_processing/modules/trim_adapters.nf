@@ -9,7 +9,9 @@ TrimGalore version: 0.6.6
 
 process TRIM {
     tag "${sample_id}_${lane}"
-    cpus params.test_mode ? 1 : 8
+    label 'medCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), val(lane), path(read1), path(read2), val(platform), val(seq_center), val(mouse_flag)

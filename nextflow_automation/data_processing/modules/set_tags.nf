@@ -9,7 +9,9 @@ Python version: 3.6.10.
 
 process SET_TAGS {
     tag "$sample_id"
-    cpus 1
+    label 'lowCpu'
+    label 'medMem'
+    label 'longTime'
 
     input:
     tuple val(sample_id), path(marked_bam), path(index)

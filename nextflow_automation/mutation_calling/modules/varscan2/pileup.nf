@@ -6,7 +6,9 @@ using SAMTools version 1.10.
 */
 process PILEUP {
     tag "${sample_id}"
-    cpus 1
+    label 'lowCpu'
+    label 'lowMem'
+    label 'extraLongTime'
 
     input:
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam, stageAs: "normal.bam"), path(normal_bai, stageAs: "normal.bai")

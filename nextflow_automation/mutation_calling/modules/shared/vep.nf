@@ -13,7 +13,9 @@ process VEP {
     publishDir "${params.output_dir}/mutation_calls/mutect2/vep_annotated_vcfs", mode: 'copy', pattern: "*mutect2*vep.vcf*"
     publishDir "${params.output_dir}/mutation_calls/MuSE/vep_annotated_vcfs", mode: 'copy', pattern: "*MuSE*vep.vcf*"
     publishDir "${params.output_dir}/mutation_calls/varscan2/vep_annotated_vcfs", mode: 'copy', pattern: "*varscan2*vep.vcf*"
-    cpus 1
+    label 'medCpu'
+    label 'medMem'
+    label 'medTime'
 
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(selected_vcf), path(index_file)

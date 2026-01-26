@@ -9,7 +9,10 @@ GATK Version: 4.2.0.0
 
 process SORT_VCFS {
     tag "${sample_id}"
-    
+    label 'lowCpu'
+    label 'lowMem'
+    label 'medTime'
+
     input:
     tuple val(sample_id), path(mutect2_vcf), path(muse_vcf), path(varscan2_vcf)
 

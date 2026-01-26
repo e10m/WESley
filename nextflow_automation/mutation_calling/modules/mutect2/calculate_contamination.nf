@@ -9,9 +9,10 @@ GATK Version: 4.2.0.0
 
 process CALCULATE_CONTAMINATION {
     tag "${sample_id}"
-    cpus 1
-    memory '2.GB'
-    
+    label 'medCpu'
+    label 'lowMem'
+    label 'shortTime'
+
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(tumor_pileups), path(normal_pileups)
 

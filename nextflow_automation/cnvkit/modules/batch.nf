@@ -8,8 +8,10 @@ CNVKit version: 0.9.10
 */
 
 process BATCH {
+    label 'highCpu'
+    label 'highMem'
+    label 'longTime'
     publishDir "${params.output_dir}/cnv_calling/raw_files", mode: 'copy', pattern: "*"
-    cpus params.cpus
 
     input:
     path(bam_list)
