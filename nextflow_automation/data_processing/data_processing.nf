@@ -91,7 +91,7 @@ workflow DATA_PROCESSING {
         .fromFilePairs([
             "${params.fastq_dir}/*_R{1,2}*.{fastq,fq}{,.gz}",
             "${params.fastq_dir}/**/*_R{1,2}*.{fastq,fq}{,.gz}"], flat: true)  // generate tuple [sample_id, read1, read2]
-        // extract sample ID and lane from file base name
+        // extract all possible sample IDs and lane from file base name (eg: 24D-001, 23-001, W13_18)
         .map { base_name, read1, read2 ->
             def sample_id = (base_name =~ /^\d+\w?-\d+/) ? 
                             (base_name =~ /^(\d+\w?-\d+)/)[0][1] : 
@@ -110,27 +110,30 @@ workflow DATA_PROCESSING {
         .fromPath(params.metadata)
         .splitCsv(header: true)
         .map { row ->
-            tuple(row."WES ID", row."Short ID") }
+            tuple(row."WES ID", row."Short ID") }  // NOTE: columns are hard-coded based on metadata sheet; they could change
         .set { metadata }
 
-    // map TCGB IDs to short IDs
+    // map TCGB IDs to short IDs and mark for contamination
     mapped_tcgb_reads = reads.tcgb
                             .join(metadata, by: 0)  // join the metadata channel with TCGB reads
                             .map { tcgb_id, lane, read1, read2, platform, seq_center, short_id ->
                                 def mouse_flag = (short_id =~ /XG?\d+/) ? true : false  // mark xenografts for contamination
                                 tuple(short_id, lane, read1, read2, platform, seq_center, mouse_flag) }
 
-    // mark short id reads for mouse contamination
+    // mark short id reads for mouse contamination only
     flagged_short_id_reads = reads.short_id
                                 .map { short_id, lane, read1, read2, platform, seq_center ->
                                     def mouse_flag = (short_id =~ /\w+XG?\d+/) ? true : false 
                                     tuple(short_id, lane, read1, read2, platform, seq_center, mouse_flag) }
 
+    // concatenate the channels
+    all_reads = mapped_tcgb_reads.concat(flagged_short_id_reads)
+
     // run FASTQC on raw reads
-    FASTQC(reads)
+    FASTQC(all_reads)
 
     // trim FASTQs using TrimGalore
-    trimmed_reads = TRIM(reads)
+    trimmed_reads = TRIM(all_reads)
 
     // diverge the data channel into contaminated/uncontaminated reads
     uncontaminated_reads = trimmed_reads.filter { it -> it[6] != true }  // mouse_flag is false
