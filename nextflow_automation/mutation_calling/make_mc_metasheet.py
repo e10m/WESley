@@ -10,142 +10,165 @@ The format follows as below:
     eg:
     Sample_ID   Tumor_ID   Tumor_BAM   Tumor_BAI   Tumor_SBI   Normal_ID    Normal_BAM
     23-028  GBX1406 23-028.BQSR.bam 23-028.BQSR.bam.bai 23-028.BQSR.bam.sbi PT406.BLD   23B-036.recalibration.sort.bam
+
+Python version: 3.10+
+Polars version: 1.34.0
 """
 
 import os
 import glob
 import re
 import argparse
-import pandas as pd
+import polars as pl
 
-# initialize argparser and the arguments
-parser = argparse.ArgumentParser(description="Simple metadata sheet generator for the mutation calling portion of the WES pipeline")
 
-parser.add_argument('-d','--bam_dir', type=str, required=True,
-                    help="Directory where the FASTQ data is")
+def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: pl.DataFrame, bam_dir: str) -> dict:
+    """Look up normal sample information for a given tumor sample."""
+    metadata_row = metadata_subset.filter(pl.col("WES ID") == sample_id)
 
-parser.add_argument('-b', '--batch_number', type=int, required=True,
-                    help="Batch number for the WES data being analyzed")
+    if metadata_row.is_empty():
+        return {
+            "Tumor_ID": "NO_FILE",
+            "Normal_ID": "NO_FILE",
+            "Normal_BAM": "NO_FILE",
+            "Normal_BAI": "NO_FILE"
+        }
 
-parser.add_argument('-o', '--output_dir', default='./', type=str, required=True,
-                    help='Where to output your file')
+    tumor_id = metadata_row.get_column("Short ID").item()
+    has_normal = metadata_row.get_column("DOES PT HAVE NRM?").item()
 
-parser.add_argument('-m', '--metadata', type=str, required=True,
-                    help='Path to where the sequencing metadata sheet is')
+    if has_normal != "Y":
+        return {
+            "Tumor_ID": tumor_id,
+            "Normal_ID": "NO_FILE",
+            "Normal_BAM": "NO_FILE",
+            "Normal_BAI": "NO_FILE"
+        }
 
-args = parser.parse_args()
+    # Find matching normal
+    cell_line = metadata_row.get_column("Line").item()
+    matching_normals = normals_df.filter(pl.col("Line") == cell_line)
 
-# input home directory
-bam_dir = args.bam_dir
-batch_number = args.batch_number
-output_dir = args.output_dir
-metadata = args.metadata
+    if matching_normals.is_empty():
+        return {
+            "Tumor_ID": tumor_id,
+            "Normal_ID": "NO_FILE",
+            "Normal_BAM": "NO_FILE",
+            "Normal_BAI": "NO_FILE"
+        }
 
-# find all BAM files
-files = glob.glob(f"{bam_dir}/*.bam")
+    # Get normal IDs
+    normal_id = matching_normals.get_column("Short ID").item()
+    normal_seq_id = matching_normals.get_column("WES ID").item()
 
-# initialize output file name
-output_file = f"{output_dir}/batch{batch_number}_mc_metasheet.tsv"
+    # Find BAM and BAI files
+    bam_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bam") or
+                 glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bam"))
+    bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
+                 glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai"))
 
-# initialize list to store the data
-data = []
+    return {
+        "Tumor_ID": tumor_id,
+        "Normal_ID": normal_id,
+        "Normal_BAM": bam_files[0] if bam_files else "NO_FILE",
+        "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
+    }
 
-### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
-# read in the 'Sequencing Metadata MAIN' .xls file
-metadata_df = pd.read_excel(metadata)
 
-### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
-# subset metadata df
-metadata_subset = metadata_df[["WES ID", "Short ID", "Sample Type", "Line", "DOES PT HAVE NRM?"]]
-normals_df = metadata_subset[metadata_subset['Sample Type'] == 'NRM']
+def main():
+    # initialize argparser and the arguments
+    parser = argparse.ArgumentParser(description="Simple metadata sheet generator for the mutation calling portion of the WES pipeline")
 
-# iterate through bam files and create the data frame
-for file in files:
-    bam_file = os.path.basename(file)
-    path = os.path.dirname(file)
+    parser.add_argument('-d','--bam_dir', type=str, required=True,
+                        help="Directory where the analysis ready BAM files are.")
 
-    # get the sample name
-    sample_name = re.search(r"^\d+\w*-\d+", bam_file)
+    parser.add_argument('-b', '--batch_name', type=int, required=True,
+                        help="Batch name for the WES data being analyzed.")
 
-    # skip cases where normal BAMs not named in
-    # canonical TCGB naming convention
-    if sample_name is None:
-        continue
+    parser.add_argument('-o', '--output_dir', default='./', type=str, required=True,
+                        help='Directory to publish the output metadata tsv sheet.')
 
-    # ternary statement to see if bai / sbi found, otherwise just placeholder string
-    bai_files = glob.glob(f"{bam_dir}/{sample_name.group(0)}*bai")
-    bai_file = bai_files[0] if bai_files else "NO_FILE"
-    sbi_files = glob.glob(f"{bam_dir}/{sample_name.group(0)}*sbi")
-    sbi_file = sbi_files[0] if sbi_files else "NO_FILE"
+    parser.add_argument('-m', '--metadata', type=str, required=True,
+                        help='Path to where the sequencing xls metadata sheet is')
 
-    # append the rows to the data list
-    data.append([
-        sample_name.group(0),
-        f"{path}/{bam_file}",
-        bai_file,
-        sbi_file
-    ])
+    args = parser.parse_args()
 
-# convert data list to pandas data frame
-df = pd.DataFrame(data, columns=["Sample_ID", "Tumor_BAM", "Tumor_BAI", "Tumor_SBI"])
+    # input home directory
+    bam_dir = args.bam_dir
+    batch_name = args.batch_name
+    output_dir = args.output_dir
+    metadata = args.metadata
 
-# insert 'Tumor_ID', 'Normal_BAM' column to df
-df.insert(1, 'Tumor_ID', '')
-df.insert(5, 'Normal_ID', '')
-df.insert(6, 'Normal_BAM', '')
-df.insert(7, 'Normal_BAI', '')
+    # find all BAM files
+    files = glob.glob(f"{bam_dir}/*.bam")
 
-# iterate through the df and update it based on 'Sequencing Metadata Main' values
-for index, row in df.iterrows():
-    sample_id = row["Sample_ID"]
+    # initialize output file name
+    output_file = f"{output_dir}/{batch_name}_mc_metasheet.tsv"
 
-    metadata_row = metadata_subset[metadata_subset['WES ID'] == sample_id]
-    
-    # Set Tumor_ID
-    df.at[index, 'Tumor_ID'] = metadata_row['Short ID'].iloc[0]
-    
-    # Check if patient has matching normal
-    if metadata_row["DOES PT HAVE NRM?"].iloc[0] == "Y":
-        # store cell line
-        cell_line = metadata_row["Line"].iloc[0]
-        matching_normals = normals_df[normals_df['Line'] == cell_line]
-        
-        # matching normal available
-        if not matching_normals.empty:
-            # store IDs
-            normal_id = matching_normals['Short ID'].iloc[0]
-            normal_seq_id = matching_normals['WES ID'].iloc[0]
-            
-            # find and store bam file
-            bam_file = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bam") or 
-                       glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bam"))
-            bai_file = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or 
-                       glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai"))
-            
-            # impute df with appropriate values
-            df.at[index, 'Normal_ID'] = normal_id
-            df.at[index, 'Normal_BAM'] = bam_file[0] if bam_file else "NO_FILE"
-            df.at[index, 'Normal_BAI'] = bai_file[0] if bai_file else "NO_FILE"
-        
-        # tumor only; append false values
-        else:
-            df.at[index, 'Normal_ID'] = "NO_FILE"
-            df.at[index, 'Normal_BAM'] = "NO_FILE"
-            df.at[index, 'Normal_BAI'] = "NO_FILE"
-    
-    # tumor only; append false values
-    else:
-        df.at[index, 'Normal_ID'] = "NO_FILE"
-        df.at[index, 'Normal_BAM'] = "NO_FILE"
-        df.at[index, 'Normal_BAI'] = "NO_FILE"
+    ### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
+    # read in the 'Sequencing Metadata MAIN' .xls file
+    metadata_df = pl.read_excel(metadata)
 
-# TODO: remove the normals marked as tumors from the metasheet
-for index, row in df.iterrows():
-    tumor_id = row["Tumor_ID"]
-    if (tumor_id in row["Normal_BAM"]) or (tumor_id == row["Normal_ID"]):
-        df = df.drop([index])
+    ### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
+    # subset metadata df
+    metadata_subset = metadata_df.select(["WES ID", "Short ID", "Sample Type", "Line", "DOES PT HAVE NRM?"])
+    normals_df = metadata_subset.filter(pl.col("Sample Type") == "NRM")
 
-# write out file
-df.to_csv(output_file, sep="\t", index=False)
+    # build data list from BAM files
+    data = []
+    for file in files:
+        bam_file = os.path.basename(file)
+        path = os.path.dirname(file)
 
-print(f"Writing metadata sheet to: {output_file}")
+        # get the sample name
+        sample_name = re.search(r"^\d+\w*-\d+", bam_file)  # get TCGB ID
+
+        # get short ID
+        if sample_name is None:
+            sample_name = re.search(r"\w+\d+", bam_file)
+
+        if sample_name is None:
+            continue
+
+        sample_id = sample_name.group(0)
+
+        # find BAI and SBI files
+        bai_files = glob.glob(f"{bam_dir}/{sample_id}*bai")
+        bai_file = bai_files[0] if bai_files else "NO_FILE"
+        sbi_files = glob.glob(f"{bam_dir}/{sample_id}*sbi")
+        sbi_file = sbi_files[0] if sbi_files else "NO_FILE"
+
+        # look up normal information
+        normal_info = find_normal_info(sample_id, metadata_subset, normals_df, bam_dir)
+
+        # append the row data
+        data.append({
+            "Sample_ID": sample_id,
+            "Tumor_ID": normal_info["Tumor_ID"],
+            "Tumor_BAM": f"{path}/{bam_file}",
+            "Tumor_BAI": bai_file,
+            "Tumor_SBI": sbi_file,
+            "Normal_ID": normal_info["Normal_ID"],
+            "Normal_BAM": normal_info["Normal_BAM"],
+            "Normal_BAI": normal_info["Normal_BAI"]
+        })
+
+    # convert data list to Polars DataFrame
+    df = pl.DataFrame(data)
+
+    # remove rows where the tumor is incorrectly marked as its own normal
+    df = df.filter(
+        ~(
+            pl.col("Normal_BAM").str.contains(pl.col("Tumor_ID")) |
+            (pl.col("Tumor_ID") == pl.col("Normal_ID"))
+        )
+    )
+
+    # write out file
+    df.write_csv(output_file, separator="\t")
+
+    print(f"Writing metadata sheet to: {output_file}")
+
+
+if __name__ == "__main__":
+    main()
