@@ -24,7 +24,7 @@ import polars as pl
 
 def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: pl.DataFrame, bam_dir: str) -> dict:
     """Look up normal sample information for a given tumor sample."""
-    metadata_row = metadata_subset.filter(pl.col("WES ID") == sample_id)
+    metadata_row = metadata_subset.filter(pl.col("Short ID") == sample_id)
 
     if metadata_row.is_empty():
         return {
@@ -74,6 +74,11 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
         "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
     }
 
+def lookup_shortid(tcgb_id: str, metadata_subset: pl.DataFrame) -> str:
+    """Look up short ID given the TCGB ID for a given sample."""
+    metadata_row = metadata_subset.filter(pl.col("WES ID") == tcgb_id)
+    short_id = metadata_row.get_column("Short ID").item()
+    return short_id
 
 def main():
     # initialize argparser and the arguments
@@ -120,31 +125,27 @@ def main():
         bam_file = os.path.basename(file)
         path = os.path.dirname(file)
 
-        # get the sample name
-        sample_name = re.search(r"^\d+\w*-\d+", bam_file)  # get TCGB ID
-
-        # get short ID
-        if sample_name is None:
-            sample_name = re.search(r"\w+\d+", bam_file)
-
-        if sample_name is None:
-            continue
-
-        sample_id = sample_name.group(0)
-
         # find BAI and SBI files
-        bai_files = glob.glob(f"{bam_dir}/{sample_id}*bai")
+        bai_files = glob.glob(f"{bam_dir}/{bam_file}*bai")
         bai_file = bai_files[0] if bai_files else "NO_FILE"
-        sbi_files = glob.glob(f"{bam_dir}/{sample_id}*sbi")
+        sbi_files = glob.glob(f"{bam_dir}/{bam_file}*sbi")
         sbi_file = sbi_files[0] if sbi_files else "NO_FILE"
 
-        # look up normal information
-        normal_info = find_normal_info(sample_id, metadata_subset, normals_df, bam_dir)
+        # Extract sample ID from BAM filename (TCGB pattern or short ID pattern)
+        original_id = (tcgb_id[0] if (tcgb_id := re.search(r"^\d+\w*-\d+", bam_file))
+                       else short_id[0] if (short_id := re.search(r"\w+\d+", bam_file))
+                       else None)
+
+        # Convert TCGB ID to short ID if needed; otherwise use extracted ID directly
+        short_id = lookup_shortid(original_id, metadata_subset) if tcgb_id else original_id
+
+        # look up normal information using short ID
+        normal_info = find_normal_info(short_id, metadata_subset, normals_df, bam_dir)
 
         # append the row data
         data.append({
-            "Sample_ID": sample_id,
-            "Tumor_ID": normal_info["Tumor_ID"],
+            "Sample_ID": original_id,
+            "Tumor_ID": short_id,
             "Tumor_BAM": f"{path}/{bam_file}",
             "Tumor_BAI": bai_file,
             "Tumor_SBI": sbi_file,
@@ -152,6 +153,7 @@ def main():
             "Normal_BAM": normal_info["Normal_BAM"],
             "Normal_BAI": normal_info["Normal_BAI"]
         })
+
 
     # convert data list to Polars DataFrame
     df = pl.DataFrame(data)
