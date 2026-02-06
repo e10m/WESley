@@ -9,9 +9,12 @@ PyTest version: 7.4.4
 """
 import pytest
 import polars as pl
+import sys
 from unittest.mock import patch
-
-from nextflow_automation.mutation_calling import find_normal_info, lookup_shortid
+import tempfile
+import os
+from pathlib import Path
+from nextflow_automation.mutation_calling import find_normal_info, lookup_shortid, main
 
 
 @pytest.fixture
@@ -107,8 +110,83 @@ def test_lookup_shortid(sample_metadata):
         assert short_id in sample_metadata.get_column("Short ID").to_list()
 
 
-def test_main():
-    """Test the main function of make_mc_metasheet.py."""
-    # This is a placeholder for testing the main function, which would require
-    # more extensive setup and teardown to handle file I/O and command-line arguments.
-    pass
+def test_main(sample_metadata):
+    """Integration test for main() function with real file I/O."""
+
+    with tempfile.TemporaryDirectory() as temp_root:
+        # Set up directory structure
+        bam_dir = os.path.join(temp_root, "bams")
+        output_dir = os.path.join(temp_root, "output")
+        normals_dir = os.path.join(bam_dir, "normals")
+
+        # Create directories
+        os.makedirs(bam_dir)
+        os.makedirs(output_dir)
+        os.makedirs(normals_dir)
+
+        # Create fake BAM files for tumor samples
+        Path(os.path.join(bam_dir, "23-028.BQSR.bam")).touch()
+        Path(os.path.join(bam_dir, "23-028.BQSR.bam.bai")).touch()
+        Path(os.path.join(bam_dir, "23-028.BQSR.bam.sbi")).touch()
+
+        Path(os.path.join(bam_dir, "23-029.BQSR.bam")).touch()
+        Path(os.path.join(bam_dir, "23-029.BQSR.bam.bai")).touch()
+
+        # Create fake BAM files for normal sample
+        Path(os.path.join(normals_dir, "PT406.BLD.bam")).touch()
+        Path(os.path.join(normals_dir, "PT406.BLD.bam.bai")).touch()
+
+        # Write metadata to Excel file
+        metadata_file = os.path.join(temp_root, "metadata.xlsx")
+        sample_metadata.write_excel(metadata_file)
+
+        # Mock sys.argv with command-line arguments
+        mock_args = [
+            'make_mc_metasheet.py',
+            '--bam_dir', bam_dir,
+            '--batch_name', 'test-batch',
+            '--output_dir', output_dir,
+            '--metadata', metadata_file
+        ]
+
+        # Call main() with mocked arguments
+        with patch.object(sys, 'argv', mock_args):
+            main()
+
+        # Verify output file exists
+        output_file = os.path.join(output_dir, 'test-batch_mc_metasheet.tsv')
+        assert os.path.exists(output_file), "Output TSV file was not created"
+
+        # Read and verify output structure
+        result_df = pl.read_csv(output_file, separator="\t")
+        expected_columns = [
+            "Sample_ID", "Tumor_ID", "Tumor_BAM", "Tumor_BAI",
+            "Tumor_SBI", "Normal_ID", "Normal_BAM", "Normal_BAI"
+        ]
+        assert list(result_df.columns) == expected_columns, f"Column mismatch. Got: {result_df.columns}"
+        assert result_df.height == 2, f"Expected 2 rows, got {result_df.height}"
+
+        # Verify specific content for Row 1: GBX1406 with normal
+        row1 = result_df.filter(pl.col("Tumor_ID") == "GBX1406")
+        assert row1.height == 1, "Expected exactly one row for GBX1406"
+
+        assert row1["Sample_ID"][0] == "23-028"
+        assert row1["Tumor_ID"][0] == "GBX1406"
+        assert row1["Tumor_BAM"][0].endswith("23-028.BQSR.bam")
+        assert row1["Tumor_BAI"][0].endswith("23-028.BQSR.bam.bai")
+        assert row1["Tumor_SBI"][0].endswith("23-028.BQSR.bam.sbi")
+        assert row1["Normal_ID"][0] == "PT406.BLD"
+        assert row1["Normal_BAM"][0].endswith("normals/PT406.BLD.bam")
+        assert row1["Normal_BAI"][0].endswith("normals/PT406.BLD.bam.bai")
+
+        # Verify specific content for Row 2: GBX1407 without normal
+        row2 = result_df.filter(pl.col("Tumor_ID") == "GBX1407")
+        assert row2.height == 1, "Expected exactly one row for GBX1407"
+
+        assert row2["Sample_ID"][0] == "23-029"
+        assert row2["Tumor_ID"][0] == "GBX1407"
+        assert row2["Tumor_BAM"][0].endswith("23-029.BQSR.bam")
+        assert row2["Tumor_BAI"][0].endswith("23-029.BQSR.bam.bai")
+        assert row2["Normal_ID"][0] == "NO_FILE"
+        assert row2["Normal_BAM"][0] == "NO_FILE"
+        assert row2["Normal_BAI"][0] == "NO_FILE"

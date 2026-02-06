@@ -1,0 +1,29 @@
+name: Metasheet Maker Testing
+
+on:
+    pull_request:
+        branches:
+            - main
+
+    push:
+        branches-ignore:
+            - main
+
+jobs:
+    test_make_mc_metasheet:
+        runs-on: ubuntu-latest
+        name: Test make_mc_metasheet.py
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Pull respective Docker image
+              run: docker pull ghcr.io/dienm2/python-3.10:latest
+
+            - name: Run pytest for make_mc_metasheet.py
+              run: |
+                  docker run --rm \
+                    -v ${{ github.workspace }}:/workspace \
+                    -w /workspace \
+                    ghcr.io/dienm2/python-3.10:latest \
+                    -c "PYTHONPATH=/workspace pytest nextflow_automation/tests/mutation_calling/modules/test_make_mc_metasheet.py -v"
