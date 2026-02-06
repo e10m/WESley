@@ -22,7 +22,7 @@ jobs:
               with:
                 max_attempts: 3
                 shell: bash
-                timeout_seconds: 10
+                timeout_seconds: 30
                 command: |
                   docker pull e10m/python:3.10
 
