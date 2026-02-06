@@ -18,12 +18,18 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Pull respective Docker image
-              run: docker pull ghcr.io/dienm2/python-3.10:latest
+              uses: nick-fields/retry@v3
+              with:
+                max_attempts: 3
+                shell: bash
+                timeout_seconds: 10
+                command: |
+                  docker pull e10m/python:3.10
 
             - name: Run pytest for make_mc_metasheet.py
               run: |
                   docker run --rm \
                     -v ${{ github.workspace }}:/workspace \
                     -w /workspace \
-                    ghcr.io/dienm2/python-3.10:latest \
+                    e10m/python:3.10 \
                     -c "PYTHONPATH=/workspace pytest nextflow_automation/tests/mutation_calling/modules/test_make_mc_metasheet.py -v"
