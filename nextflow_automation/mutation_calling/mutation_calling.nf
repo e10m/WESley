@@ -34,7 +34,7 @@ def help_message() {
     Required arguments:
     --output_dir                  Path to the output directory for results
     --ref_dir                     Path to the reference directory
-    --metadata                    Path to the metadata sheet created by 'make_mc_metasheet.py'
+    --metadata                    Path to the metadata sheet created by 'make_mc_manifest.py'
     --interval_list               Path to interval list file for targeted analysis
 
     Optional arguments:

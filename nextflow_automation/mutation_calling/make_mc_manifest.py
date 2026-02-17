@@ -1,5 +1,5 @@
 """
-make_mc_metasheet.py module
+make_mc_manifest.py module
 
 This python script creates a metadata sheet which matches the tumor BAM files and their indices
 to their respective matching normals (if available).
@@ -108,7 +108,7 @@ def main():
     files = glob.glob(f"{bam_dir}/*.bam")
 
     # initialize output file name
-    output_file = f"{output_dir}/{batch_name}_mc_metasheet.tsv"
+    output_file = f"{output_dir}/{batch_name}_mc_manifest.tsv"
 
     ### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
     # read in the 'Sequencing Metadata MAIN' .xls file
