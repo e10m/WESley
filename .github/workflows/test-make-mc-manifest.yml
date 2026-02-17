@@ -1,4 +1,4 @@
-name: Metasheet Maker Testing
+name: Manifest Maker Testing
 
 on:
     pull_request:
@@ -10,9 +10,9 @@ on:
             - main
 
 jobs:
-    test_make_mc_metasheet:
+    test_make_mc_manifest:
         runs-on: ubuntu-latest
-        name: Test make_mc_metasheet.py
+        name: Test make_mc_manifest.py
 
         steps:
             - uses: actions/checkout@v4
@@ -26,10 +26,10 @@ jobs:
                 command: |
                   docker pull e10m/python:3.10
 
-            - name: Run pytest for make_mc_metasheet.py
+            - name: Run pytest for make_mc_manifest.py
               run: |
                   docker run --rm \
                     -v ${{ github.workspace }}:/workspace \
                     -w /workspace \
                     e10m/python:3.10 \
-                    -c "PYTHONPATH=/workspace pytest nextflow_automation/tests/mutation_calling/modules/test_make_mc_metasheet.py -v"
+                    -c "PYTHONPATH=/workspace pytest nextflow_automation/tests/mutation_calling/modules/test_make_mc_manifest.py -v"

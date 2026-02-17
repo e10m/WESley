@@ -1,7 +1,7 @@
 """
-test_make_mc_metasheet.py module
+test_make_mc_manifest.py module
 
-This python script tests 'make_mc_metasheet.py' with a test dataset.
+This python script tests 'make_mc_manifest.py' with a test dataset.
 
 Python version: 3.10+
 Polars version: 1.34.0
@@ -45,7 +45,7 @@ def test_find_normal_info(sample_metadata):
     bam_dir = "/path/to/bams"
 
     # mock glob calls to return expected BAM and BAI files
-    with patch('nextflow_automation.mutation_calling.make_mc_metasheet.glob.glob') as mock_glob:
+    with patch('nextflow_automation.mutation_calling.make_mc_manifest.glob.glob') as mock_glob:
         # configure mock return values - patterns must match what the function actually calls
         pattern_responses = {
             f"{bam_dir}/normals/PT406.BLD*.bam": [f"{bam_dir}/normals/PT406.BLD.bam"],
@@ -142,7 +142,7 @@ def test_main(sample_metadata):
 
         # Mock sys.argv with command-line arguments
         mock_args = [
-            'make_mc_metasheet.py',
+            'make_mc_manifest.py',
             '--bam_dir', bam_dir,
             '--batch_name', 'test-batch',
             '--output_dir', output_dir,
@@ -154,7 +154,7 @@ def test_main(sample_metadata):
             main()
 
         # Verify output file exists
-        output_file = os.path.join(output_dir, 'test-batch_mc_metasheet.tsv')
+        output_file = os.path.join(output_dir, 'test-batch_mc_manifest.tsv')
         assert os.path.exists(output_file), "Output TSV file was not created"
 
         # Read and verify output structure
