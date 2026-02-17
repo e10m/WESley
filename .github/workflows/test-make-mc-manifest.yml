@@ -1,0 +1,35 @@
+name: Manifest Maker Testing
+
+on:
+    pull_request:
+        branches:
+            - main
+
+    push:
+        branches-ignore:
+            - main
+
+jobs:
+    test_make_mc_manifest:
+        runs-on: ubuntu-latest
+        name: Test make_mc_manifest.py
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Pull respective Docker image
+              uses: nick-fields/retry@v3
+              with:
+                max_attempts: 3
+                shell: bash
+                timeout_seconds: 30
+                command: |
+                  docker pull e10m/python:3.10
+
+            - name: Run pytest for make_mc_manifest.py
+              run: |
+                  docker run --rm \
+                    -v ${{ github.workspace }}:/workspace \
+                    -w /workspace \
+                    e10m/python:3.10 \
+                    -c "PYTHONPATH=/workspace pytest nextflow_automation/tests/mutation_calling/modules/test_make_mc_manifest.py -v"

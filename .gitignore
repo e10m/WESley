@@ -6,3 +6,6 @@
 **/.nf-test.log
 **/work
 **/.nextflow*
+**/.pytest*
+**/__pycache__/
+**/*.pyc

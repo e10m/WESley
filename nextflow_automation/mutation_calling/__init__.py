@@ -1,0 +1,1 @@
+from .make_mc_manifest import find_normal_info, lookup_shortid, main
