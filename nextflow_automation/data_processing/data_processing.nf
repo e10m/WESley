@@ -61,11 +61,6 @@ workflow DATA_PROCESSING {
         exit 1
     }
 
-    if (!params.batch_name) {
-        error "ERROR: --batch_name parameter is required"
-        exit 1
-    }
-
     // workflow logging
     log.info """\
  __     __     ______     ______     __         ______     __  __    
