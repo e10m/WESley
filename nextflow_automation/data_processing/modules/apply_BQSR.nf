@@ -12,8 +12,8 @@ process APPLY_BQSR {
     tag "$sample_id"
     publishDir "${params.output_dir}/preprocessing/analysis_ready_bams", mode: 'copy'
     label 'highCpu'
-    label 'medMem'
-    label 'medTime'
+    label 'highMem'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(tagged_bam), path(recal_data_table)

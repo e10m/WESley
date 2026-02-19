@@ -11,7 +11,7 @@ process CALC_COVERAGE {
     tag "${sample_id}"
     label 'lowCpu'
     label 'medMem'
-    label 'medTime'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(bam), path(bai)

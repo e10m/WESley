@@ -11,8 +11,8 @@ Python version: 3.6.10.
 process RECAL_BASES {
     tag "$sample_id"
     label 'highCpu'
-    label 'medMem'
-    label 'medTime'
+    label 'highMem'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(tagged_bam), path(index)

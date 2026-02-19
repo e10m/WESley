@@ -11,7 +11,7 @@ process SET_TAGS {
     tag "$sample_id"
     label 'lowCpu'
     label 'medMem'
-    label 'medTime'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(marked_bam), path(index)
