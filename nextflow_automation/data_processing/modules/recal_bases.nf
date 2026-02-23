@@ -13,6 +13,7 @@ process RECAL_BASES {
     label 'highCpu'
     label 'highMem'
     label 'shortTime'
+    publishDir "${params.output_dir}/preprocessing/recal-tables", mode: 'copy', pattern: "*.recal_data.table"
 
     input:
     tuple val(sample_id), path(tagged_bam), path(index)

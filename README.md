@@ -389,13 +389,14 @@ nf-test test tests/mutation_calling/modules/mutect2/*.nf.test
 - Test data: `nextflow_automation/test-data/`
 
 ### GitHub Actions CI/CD
-Three workflows automatically validate code on pull requests:
+Four workflows automatically validate code on pull requests:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | **Nextflow Linter** | PRs to main | Validates code style and Nextflow best practices |
 | **Data Processing Tests** | PRs & branch pushes | Tests 7 modules (TRIM, FASTQC, BWA_ALIGN, MARK_DUPES, SET_TAGS, RECAL_BASES, APPLY_BQSR) |
 | **Mutation Calling Tests** | PRs & branch pushes | Tests 5 Mutect2 modules (MUTECT2_CALL, GET_PILEUP_SUMMARIES, CALCULATE_CONTAMINATION, LEARN_READ_ORIENTATION, FILTER_MUTECT_CALLS) |
+| **Make MC Manifest Tests** | PRs & branch pushes | pytest unit + integration tests for `make_mc_manifest.py` |
 
 Tests run in parallel using GitHub Actions matrix strategy for faster CI/CD execution.
 
@@ -407,7 +408,9 @@ Tests run in parallel using GitHub Actions matrix strategy for faster CI/CD exec
 base_dir/
 ├── preprocessing/
 │   └── analysis_ready_bams/
-│       └── {sample_id}.BQSR.bam
+│   │   └── {sample_id}.BQSR.bam
+│   └── recal-tables 
+│   │   └── ${sample_id}.recal_data.table
 ├── QC/
 │   └── multiqc_data/
 │   └── multiqc_report_{date}.html
