@@ -350,7 +350,7 @@ containerOptions = "-v ${params.ref_dir}:/references"
 - Ensure the proper references and metadata are downloaded
 - Docker, Nextflow, and Java 11.0.1 installed on a conda environment
   - conda install conda-forge/label/cf201901::openjdk=11.0.1
-  - conda install bioconda::nextflow=24.10.5
+  - conda install bioconda::nextflow=25.04.6
   - conda install conda-forge::docker
 - FASTQ files need to be compressed (.gz)
 - Pull all Docker images
