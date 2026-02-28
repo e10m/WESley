@@ -1,0 +1,32 @@
+name: OncoKB API Key Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 09:00 UTC
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  check_api_key:
+    runs-on: ubuntu-latest
+    name: Validate OncoKB API Key
+
+    steps:
+      - name: Check OncoKB API key validity
+        env:
+          ONCOKB_API_KEY: ${{ secrets.ONCOKB_API_KEY }}
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${ONCOKB_API_KEY}" \
+            "https://www.oncokb.org/api/v1/genes")
+
+          echo "OncoKB API response status: ${HTTP_STATUS}"
+
+          if [ "${HTTP_STATUS}" -eq 200 ]; then
+            echo "API key is valid."
+          elif [ "${HTTP_STATUS}" -eq 401 ]; then
+            echo "ERROR: API key is invalid or expired (401 Unauthorized). Renew at https://www.oncokb.org/account/settings."
+            exit 1
+          else
+            echo "ERROR: Unexpected response status ${HTTP_STATUS}."
+            exit 1
+          fi
