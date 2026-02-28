@@ -17,7 +17,7 @@ jobs:
         run: |
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${ONCOKB_API_KEY}" \
-            "https://www.oncokb.org/api/v1/genes")
+            "https://www.oncokb.org/api/v1/info")
 
           echo "OncoKB API response status: ${HTTP_STATUS}"
 
