@@ -13,7 +13,7 @@ process SPLIT {
     publishDir "${params.output_dir}/preprocessing/bbsplit", mode: 'copy', pattern: "*refstats.txt"
     label 'highCpu'
     label 'extraHighMem'
-    label 'extraLongTime'
+    label 'longTime'
 
     input:
     tuple val(sample_id), val(lane), path(contaminated_read1), path(contaminated_read2), val(platform), val(seq_center), val(mouse_flag)

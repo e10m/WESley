@@ -29,6 +29,8 @@ workflow DATA_PROCESSING {
         --ref_dir                     Path to the reference directory
         --metadata                    Path to metadata file
         --batch_name                  Name of the batch for output organization
+        --seq_center                  Sequencing center
+        --platform                    Sequencing platform (eg: Illumina HiSeq, Illumina NovaSeq, etc.)
 
         Optional arguments:
         --cpus                        Number of CPUs to use for processing (default: 30)
@@ -61,8 +63,13 @@ workflow DATA_PROCESSING {
         exit 1
     }
 
-    if (!params.batch_name) {
-        error "ERROR: --batch_name parameter is required"
+    if (!params.seq_center) {
+        error "ERROR: --seq_center parameter is required"
+        exit 1
+    }
+
+    if (!params.platform) {
+        error "ERROR: --platform parameter is required"
         exit 1
     }
 

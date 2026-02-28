@@ -14,7 +14,7 @@ process MARK_DUPES {
     tag "$sample_id"
     label 'highCpu'
     label 'highMem'
-    label 'medTime'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), path(sorted_bams)

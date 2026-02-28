@@ -11,7 +11,7 @@ process TRIM {
     tag "${sample_id}_${lane}"
     label 'medCpu'
     label 'medMem'
-    label 'medTime'
+    label 'shortTime'
 
     input:
     tuple val(sample_id), val(lane), path(read1), path(read2), val(platform), val(seq_center), val(mouse_flag)
