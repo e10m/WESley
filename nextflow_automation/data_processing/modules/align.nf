@@ -55,6 +55,9 @@ process BWA_ALIGN {
     samtools sort -n \
     -@ ${task.cpus} \
     -o "${sample_id}_${lane}.sorted.bam" \
-    "${sample_id}_${lane}.tmp.bam"    
+    "${sample_id}_${lane}.tmp.bam"
+
+    # clean up intra-process temp files
+    rm -f "${sample_id}_${lane}.tmp.sam" "${sample_id}_${lane}.tmp.bam"
     """
 }
