@@ -8,7 +8,7 @@ MultiQC version: v1.30.
 */
 
 process MULTIQC {
-    publishDir "${params.output_dir}/QC-${file(params.output_dir).name}", mode: 'copy'
+    publishDir "${params.output_dir}/QC-${file(params.fastq_dir).name}", mode: 'copy'
     containerOptions "-v ${workflow.workDir}:/work"
     label 'lowCpu'
     label 'lowMem'
