@@ -1,4 +1,4 @@
-/* 
+/*
 mutect2_pon.nf module
 
 This module performs the initial GATK Mutect2 variant calling step
@@ -17,6 +17,8 @@ process MUTECT2_PON {
 
     input:
     tuple val(sample_id), path(normal_bam), path(normal_bai)
+    path ref_fasta
+    path ref_fasta_index
 
     output:
     path("*vcf*")
@@ -24,7 +26,7 @@ process MUTECT2_PON {
     script:
     """
     gatk Mutect2 \\
-        -R "/references/Homo_sapiens_assembly38.fasta" \\
+        -R ${ref_fasta} \\
         -I $normal_bam \\
         --max-mnp-distance 0 \\
         -O "${sample_id}.vcf.gz"
