@@ -17,6 +17,7 @@ process MUTECT2_CALL {
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam), path(normal_bai)
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
     path gnomad_vcf
     path gnomad_vcf_index
     path interval_list
@@ -31,12 +32,12 @@ process MUTECT2_CALL {
 
     """
     gatk Mutect2 \\
-        -R ${ref_fasta} \\
-        -I ${tumor_bam} \\
-        ${normal_args} \\
-        --germline-resource ${gnomad_vcf} \\
-        -L ${interval_list} \\
-        --f1r2-tar-gz ${sample_id}.f1r2.tar.gz \\
+        -R $ref_fasta \\
+        -I $tumor_bam \\
+        $normal_args \\
+        --germline-resource $gnomad_vcf \\
+        -L $interval_list \\
+        --f1r2-tar-gz "${sample_id}.f1r2.tar.gz" \\
         -O $output_name \\
         --genotype-germline-sites true \\
         --genotype-pon-sites true \\

@@ -161,7 +161,7 @@ workflow MUTATION_CALLING {
         }
 
     // filter Mutect2 calls
-    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index)
+    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index, ref_dict)
 
     // run MuSE variant caller
     muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, muse_dbsnp)

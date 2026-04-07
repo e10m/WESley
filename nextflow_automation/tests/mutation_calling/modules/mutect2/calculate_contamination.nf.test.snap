@@ -1,0 +1,42 @@
+{
+    "Should run paired mode with pileup tables": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.paired.contamination.table:md5,ff348a26dd09404239a7ed0da7d98874",
+                        "test.paired.segments.table:md5,e36c966f4a62d4840bddbcfb0c683e57"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:53:31.457591"
+    },
+    "Should run tumor-only mode": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.tumorOnly.contamination.table:md5,ff348a26dd09404239a7ed0da7d98874",
+                        "test.tumorOnly.segments.table:md5,e36c966f4a62d4840bddbcfb0c683e57"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:53:36.132056"
+    }
+}

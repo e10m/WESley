@@ -1,0 +1,44 @@
+{
+    "Should process learn read orientation for tumor only calls without failing": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.mutect2.tumorOnly.vcf:md5,ef26ad1ed61eace318def698a612b493",
+                        "test.read-orientation-model.tar.gz:md5,fee145767bb7c86332e7544a7609f26c",
+                        "test.mutect2.tumorOnly.vcf.stats:md5,e1f7c46bebc295abda7bf4422f0759a8"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:54:59.294611"
+    },
+    "Should process learn read orientation for paired calls without failing": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.mutect2.paired.vcf:md5,d59092dce022a5ee00324127bc1e2ca8",
+                        "test.read-orientation-model.tar.gz:md5,32cfcd7782e6e582063544569c4d20d7",
+                        "test.mutect2.paired.vcf.stats:md5,198eb73e38b8d864e0f795a97605c2c7"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:54:43.289111"
+    }
+}

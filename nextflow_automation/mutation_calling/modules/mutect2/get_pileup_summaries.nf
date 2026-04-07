@@ -17,6 +17,7 @@ process GET_PILEUP_SUMMARIES {
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam), path(normal_bai)
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
     path contamination_vcf
     path contamination_vcf_index
     path interval_list

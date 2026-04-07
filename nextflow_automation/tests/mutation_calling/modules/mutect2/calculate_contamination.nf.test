@@ -8,8 +8,7 @@ nextflow_process {
     test("Should run paired mode with pileup tables") {
         when {
             params {
-                test_mode = true
-                test_data = "${projectDir}/test-data/pileups"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -17,8 +16,8 @@ nextflow_process {
                     'test', 
                     'testT', 
                     'testN',
-                    file('${params.test_data}/test.tumor-pileups.table'),
-                    file('${params.test_data}/test.normal-pileups.table')
+                    file('${params.test_data}/pileups/test.tumor-pileups.table'),
+                    file('${params.test_data}/pileups/test.normal-pileups.table')
                 ]
                 """
             }
@@ -26,26 +25,15 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
-            def output_tuple = process.out[0][0]
-
-            with(output_tuple) {
-                assert size() == 5
-                assert get(0) == 'test'
-                assert get(1) == 'testT'
-                assert get(2) == 'testN'
-                assert file(get(3)).name == 'test.paired.contamination.table'
-                assert file(get(4)).name == 'test.paired.segments.table'
-            }
+            assert process.out.size() > 0
+            assert snapshot(process.out).match()
         }
     }
 
     test("Should run tumor-only mode") {
         when {
             params {
-                test_mode = true
-                test_data = "${projectDir}/test-data/pileups"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -53,8 +41,8 @@ nextflow_process {
                     'test',
                     'testT',
                     'testN',
-                    file('${params.test_data}/test.tumor-pileups.table'),
-                    file('${params.test_data}/test.empty-normal-pileups.table')
+                    file('${params.test_data}/pileups/test.tumor-pileups.table'),
+                    file('${params.test_data}/pileups/test.empty-normal-pileups.table')
                 ]
                 """
             }
@@ -62,18 +50,8 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
-            def output_tuple = process.out[0][0]
-
-            with(output_tuple) {
-                assert size() == 5
-                assert get(0) == 'test'
-                assert get(1) == 'testT'
-                assert get(2) == 'testN'
-                assert file(get(3)).name == 'test.tumorOnly.contamination.table'
-                assert file(get(4)).name == 'test.tumorOnly.segments.table'
-            }
+            assert process.out.size() > 0
+            assert snapshot(process.out).match()
         }
     }
 }

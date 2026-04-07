@@ -17,6 +17,7 @@ process FILTER_MUTECT_CALLS {
     tuple val(sample_id), val(tumor_id), val(normal_id), path(unfiltered_vcf), path(orientation_model), path(m2_stats), path(contamination_table), path(segments_table)
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
 
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2*filtered.vcf")

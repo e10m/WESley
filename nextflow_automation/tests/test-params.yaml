@@ -1,0 +1,22 @@
+ref_dir: "${projectDir}/test-data/references"
+test_data: "${projectDir}/test-data"
+test_mode: true
+cpus: 1
+
+# test reference file paths
+ref_fasta: "${projectDir}/test-data/references/hg38_chr22.fasta"
+ref_fasta_index: "${projectDir}/test-data/references/hg38_chr22.fasta.fai"
+ref_dict: "${projectDir}/test-data/references/hg38_chr22.dict"
+gnomad_vcf: "${projectDir}/test-data/references/gnomAD_chr22.vcf.gz"
+gnomad_vcf_index: "${projectDir}/test-data/references/gnomAD_chr22.vcf.gz.tbi"
+contamination_vcf: "${projectDir}/test-data/references/gnomAD_chr22.vcf.gz"
+contamination_vcf_index: "${projectDir}/test-data/references/gnomAD_chr22.vcf.gz.tbi"
+muse_dbsnp: "${projectDir}/test-data/references/common_all_20180418.vcf.gz"
+interval_list: "${projectDir}/test-data/references/genome_intervals.hg38_chr22.bed"
+nonsynonymous_list: "${projectDir}/test-data/references/nonsynonymous.txt"
+vep_cache: "/opt/vep/.vep"
+
+# OncoKB test settings
+use_secrets_manager: false
+oncokb_api_key: "test-key"
+oncokb_secret_name: "oncokb-api-key"

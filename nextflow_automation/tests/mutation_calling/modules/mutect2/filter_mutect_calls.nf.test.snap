@@ -1,0 +1,40 @@
+{
+    "Should handle tumor-only filtering": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.mutect2.tumorOnly.filtered.vcf:md5,09c479174d398b6a89107c115331fd19"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:54:13.190214"
+    },
+    "Should filter paired mutect2 variant calls w/o failing": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "test",
+                        "testT",
+                        "testN",
+                        "test.mutect2.paired.filtered.vcf:md5,dc57bde6ab4e73c69fc05e40ee11e16c"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-07T14:54:07.614289"
+    }
+}
