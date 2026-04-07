@@ -1,4 +1,4 @@
-/* 
+/*
 mutect2_call.nf module
 
 This module performs the initial GATK Mutect2 variant calling step.
@@ -15,28 +15,27 @@ process MUTECT2_CALL {
 
     input:
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam), path(normal_bai)
+    path ref_fasta
+    path ref_fasta_index
+    path gnomad_vcf
+    path gnomad_vcf_index
+    path interval_list
 
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.mutect2.*.vcf"), path("${sample_id}.f1r2.tar.gz"), path("${sample_id}*stats")
 
     script:
-    // change arguments based on tumor-only vs. paired calling
-    def normal_args = (normal_bam.size() > 0 ? 
+    def normal_args = (normal_bam.size() > 0 ?
         "-I ${normal_bam} -normal ${normal_id}" : "")
-
-    // change parameters based on testing or production environment
-    def ref_genome = params.test_mode ? "hg38_chr22.fasta" : "Homo_sapiens_assembly38.fasta"
-    def germline_resource = params.test_mode ? "gnomAD_chr22.vcf.gz" : "af-only-gnomad.hg38.vcf.gz"
-    def intervals = params.test_mode ? "genome_intervals.hg38_chr22.bed" : params.interval_list
     def output_name = (normal_args ? "${sample_id}.mutect2.paired.vcf" : "${sample_id}.mutect2.tumorOnly.vcf")
 
     """
     gatk Mutect2 \\
-        -R "/references/${ref_genome}" \\
+        -R ${ref_fasta} \\
         -I ${tumor_bam} \\
         ${normal_args} \\
-        --germline-resource "/references/${germline_resource}" \\
-        -L "/references/${intervals}" \\
+        --germline-resource ${gnomad_vcf} \\
+        -L ${interval_list} \\
         --f1r2-tar-gz ${sample_id}.f1r2.tar.gz \\
         -O $output_name \\
         --genotype-germline-sites true \\
