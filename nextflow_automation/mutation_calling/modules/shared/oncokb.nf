@@ -1,4 +1,4 @@
-/* 
+/*
 oncokb.nf
 
 This module provides clinically relevant annotations to the variant calling MAF files
@@ -15,7 +15,6 @@ process ONCOKB {
     label 'lowCpu'
     label 'lowMem'
     label 'medTime'
-    secret 'ONCOKB_API_KEY'
 
     input:
     tuple val(sample_id), path(nonsyno_maf)
@@ -24,7 +23,14 @@ process ONCOKB {
     tuple val(sample_id), path("*vep.nonsynonymous.oncokb.maf")
 
     script:
+    def get_key = params.use_secrets_manager
+        ? "ONCOKB_API_KEY=\$(aws secretsmanager get-secret-value --secret-id ${params.oncokb_secret_name} --query SecretString --output text)"
+        : "ONCOKB_API_KEY=${params.oncokb_api_key}"
+
     """
+    # retrieve OncoKB API key
+    ${get_key}
+
     # save the base name to change parameters based on variant caller
     BASE_NAME=\$(basename "${nonsyno_maf}")
 
@@ -37,7 +43,7 @@ process ONCOKB {
     elif [[ "\$BASE_NAME" == *"varscan2"* ]]; then
         OUTPUT_NAME="${sample_id}.varscan2.vep.nonsynonymous.oncokb.maf"
     fi
-    
+
     # annotate via oncokb
     python /app/MafAnnotator.py \
     -i $nonsyno_maf \

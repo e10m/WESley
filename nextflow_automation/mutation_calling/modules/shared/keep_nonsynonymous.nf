@@ -15,6 +15,7 @@ process KEEP_NONSYNONYMOUS {
 
     input:
     tuple val(sample_id), path(maf_file)
+    path nonsynonymous_list
 
     output:
     tuple val(sample_id), path("*vep.nonsynonymous.maf")
@@ -39,6 +40,6 @@ process KEEP_NONSYNONYMOUS {
     -w \
     -F \
     -f \
-    /references/nonsynonymous.txt $maf_file > "\$OUTPUT_NAME"
+    ${nonsynonymous_list} $maf_file > "\$OUTPUT_NAME"
     """
 }
