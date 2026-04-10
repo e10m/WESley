@@ -17,21 +17,22 @@ ECR_BASE="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 aws ecr get-login-password --region "${REGION}" | \
     docker login --username AWS --password-stdin "${ECR_BASE}"
 
-# Define images: local_image -> ecr_repo:tag
-declare -A IMAGES=(
-    ["broadinstitute/gatk:4.2.0.0"]="gatk:4.2.0.0"
-    ["quay.io/biocontainers/samtools:1.10--h9402c20_1"]="samtools:1.10"
-    ["quay.io/biocontainers/muse:1.0.rc--1"]="muse:1.0.rc"
-    ["e10m/varscan2:latest"]="varscan2:latest"
-    ["ensemblorg/ensembl-vep:release_115.0"]="vep:115.0"
-    ["e10m/vcf2maf:1.6.19"]="vcf2maf:1.6.19"
-    ["e10m/oncokb:3.0.0-awscli"]="oncokb:3.0.0-awscli"
-    ["staphb/bcftools:1.10.2"]="bcftools:1.10.2"
-    ["ubuntu:20.04"]="ubuntu:20.04"
+# Define images: local_image|ecr_repo:tag
+IMAGES=(
+    "broadinstitute/gatk:4.2.0.0|gatk:4.2.0.0"
+    "quay.io/biocontainers/samtools:1.10--h9402c20_1|samtools:1.10"
+    "quay.io/biocontainers/muse:1.0.rc--1|muse:1.0.rc"
+    "e10m/varscan2:latest|varscan2:latest"
+    "ensemblorg/ensembl-vep:release_115.0|vep:115.0"
+    "e10m/vcf2maf:1.6.19|vcf2maf:1.6.19"
+    "e10m/oncokb-awscli:3.0.0|oncokb:3.0.0"
+    "staphb/bcftools:1.10.2|bcftools:1.10.2"
+    "ubuntu:20.04|ubuntu:20.04"
 )
 
-for LOCAL_IMAGE in "${!IMAGES[@]}"; do
-    ECR_TAG="${IMAGES[$LOCAL_IMAGE]}"
+for ENTRY in "${IMAGES[@]}"; do
+    LOCAL_IMAGE="${ENTRY%%|*}"
+    ECR_TAG="${ENTRY##*|}"
     ECR_REPO="${ECR_TAG%%:*}"
     ECR_URI="${ECR_BASE}/${ECR_TAG}"
 
