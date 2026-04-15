@@ -40,7 +40,6 @@ def help_message() {
 
     Optional arguments:
     --cpus                        Number of CPUs to use for processing (default: 30)
-    --test_mode                   Enable test mode with reduced dataset (default: false)
     --help                        Show this help message and exit
 
     Examples:

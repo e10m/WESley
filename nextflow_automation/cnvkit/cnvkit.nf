@@ -57,6 +57,7 @@ def help_message() {
         
         Required arguments:
         --bam_dir                     Path to the directory containing normal BAM files
+        --ref_dir                     Path to the reference directory
         --output_dir                  Path to the output directory
         --capture_kit                 Name of the capture kit (used for naming output files, eg: SeqCap, KAPA, etc.)
         --annotation                  Gene annotation file name (eg: refFlat.txt)
@@ -65,6 +66,7 @@ def help_message() {
         Optional arguments:
         --ref_genome                  Reference genome FASTA file name (default: Homo_sapiens_assembly38.fasta)
         --access                      Accessible genomic regions BED file name (default: hg38_access.bed)
+        --seq_platform                Sequencing platform name (used in output CNN file naming)
         --cpus                        Number of CPUs to use for processing (default: 1)
         --help                        Show this help message and exit
         
@@ -169,6 +171,7 @@ workflow CREATE_NORM {
     // show the help message if required
     if (params.help) {
         help_message()
+        exit(0)
     }
 
     // Parameter validation
