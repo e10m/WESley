@@ -3,17 +3,25 @@
         "content": [
             {
                 "0": [
-                    
+                    [
+                        "test",
+                        "test.BQSR.bam:md5,c75c2d83ea8d2d9738ea71e8913e8655",
+                        "test.BQSR.bai:md5,d23ebc55593be10d90842f6a484e8af4"
+                    ]
                 ],
                 "bqsr_bams": [
-                    
+                    [
+                        "test",
+                        "test.BQSR.bam:md5,c75c2d83ea8d2d9738ea71e8913e8655",
+                        "test.BQSR.bai:md5,d23ebc55593be10d90842f6a484e8af4"
+                    ]
                 ]
             }
         ],
         "meta": {
             "nf-test": "0.9.3",
-            "nextflow": "25.10.2"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2026-04-15T16:28:22.065376"
+        "timestamp": "2026-04-15T16:42:27.218835"
     }
 }

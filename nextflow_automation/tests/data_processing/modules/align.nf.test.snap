@@ -3,17 +3,23 @@
         "content": [
             {
                 "0": [
-                    
+                    [
+                        "dummy",
+                        "dummy_L001.sorted.bam:md5,1f9e9b93cbb67662378738890970b06c"
+                    ]
                 ],
                 "temp_bams": [
-                    
+                    [
+                        "dummy",
+                        "dummy_L001.sorted.bam:md5,1f9e9b93cbb67662378738890970b06c"
+                    ]
                 ]
             }
         ],
         "meta": {
             "nf-test": "0.9.3",
-            "nextflow": "25.10.2"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2026-04-15T16:28:18.412336"
+        "timestamp": "2026-04-15T16:42:20.185774"
     }
 }

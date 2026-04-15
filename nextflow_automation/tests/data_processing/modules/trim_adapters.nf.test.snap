@@ -3,17 +3,33 @@
         "content": [
             {
                 "0": [
-                    
+                    [
+                        "dummy",
+                        "L001",
+                        "dummy_L001_val_1.fq.gz:md5,170df82e4201558b9095e476ecd07221",
+                        "dummy_L001_val_2.fq.gz:md5,111026de3d4a36a83d1c8cce6b2bb21d",
+                        "illumina_novaseq_x",
+                        "tcgb",
+                        false
+                    ]
                 ],
                 "trimmed_fastqs": [
-                    
+                    [
+                        "dummy",
+                        "L001",
+                        "dummy_L001_val_1.fq.gz:md5,170df82e4201558b9095e476ecd07221",
+                        "dummy_L001_val_2.fq.gz:md5,111026de3d4a36a83d1c8cce6b2bb21d",
+                        "illumina_novaseq_x",
+                        "tcgb",
+                        false
+                    ]
                 ]
             }
         ],
         "meta": {
             "nf-test": "0.9.3",
-            "nextflow": "25.10.2"
+            "nextflow": "25.04.6"
         },
-        "timestamp": "2026-04-15T16:28:38.339372"
+        "timestamp": "2026-04-15T16:42:53.165792"
     }
 }
