@@ -12,9 +12,9 @@ process CREATE_MAF {
     label 'lowCpu'
     label 'lowMem'
     label 'medTime'
-    publishDir "${params.output_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*maf*"
-    publishDir "${params.output_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*maf*"
-    publishDir "${params.output_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*maf*"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/raw_maf", mode: 'copy', pattern: "*mutect2*maf*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/raw_maf", mode: 'copy', pattern: "*MuSE*maf*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/raw_maf", mode: 'copy', pattern: "*varscan2*maf*"
 
     input:
     tuple val(sample_id), path(vcf)

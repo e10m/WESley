@@ -21,6 +21,7 @@ include { ONCOKB } from './modules/shared/oncokb.nf'
 include { MUTECT2_PON } from './modules/mutect2_pon/mutect2_pon.nf'
 include { GENOMICS_DB_IMPORT } from './modules/mutect2_pon/genomics_db_import.nf'
 include { CREATE_PON } from './modules/mutect2_pon/create_pon.nf'
+include { KEEP_TERTP } from './modules/shared/keep_tertP.nf'
 
 
 // define functions for user guidance
@@ -190,6 +191,9 @@ workflow MUTATION_CALLING {
 
     // generate MAF files
     maf_files = CREATE_MAF(reheadered_vcfs, ref_fasta)
+
+    // grep and keep only tert promoter mutations
+    KEEP_TERTP(maf_files)
 
     // filter out synonymous mutations
     nonsynonymous_mutations = KEEP_NONSYNONYMOUS(maf_files, nonsynonymous_list)
