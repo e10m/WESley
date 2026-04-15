@@ -28,34 +28,8 @@ nextflow_process {
         }
 
         then {
-            // check the process succeeded without error messages
             assert process.success
-
-            // check outputs
-            with(process.out.fastqc_files) {
-                def files = get(0)  // directly access the first emission
-                assert files.size() == 2  // verify tuple size of 2
-
-                def html_files = files[0]
-                def zip_files = files[1]
-                
-                // check if 2 types of each file
-                assert html_files.size() == 2
-                assert zip_files.size() == 2
-
-                println("\n\n* Both .html files and .zip files found in array")
-
-                // verify all files exist
-                html_files.each { file ->
-                    assert path(file).exists()
-                }
-
-                zip_files.each { file ->
-                    assert path(file).exists()
-                }
-
-                println("\n* All files exist")
-            }
+            assert snapshot(process.out).match()
         }
     }
 }

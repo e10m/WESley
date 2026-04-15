@@ -1,0 +1,19 @@
+{
+    "Should align via bwa-mem without failures": {
+        "content": [
+            {
+                "0": [
+                    
+                ],
+                "temp_bams": [
+                    
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
+        },
+        "timestamp": "2026-04-15T16:28:18.412336"
+    }
+}

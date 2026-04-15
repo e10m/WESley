@@ -1,0 +1,19 @@
+{
+    "Should add the metadata tags to BAM without failures": {
+        "content": [
+            {
+                "0": [
+                    
+                ],
+                "tagged_bams": [
+                    
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
+        },
+        "timestamp": "2026-04-15T16:28:35.150629"
+    }
+}

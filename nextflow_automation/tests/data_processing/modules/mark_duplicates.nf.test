@@ -26,25 +26,7 @@ nextflow_process {
 
         then {
             assert process.success
-            println("\n* Duplicates marked successfully")
-
-            with(process.out.mark_dupe_bams) {
-                def outputs = get(0)  // directly access output tuple
-
-                assert outputs.size() == 3
-                println("\n* 3 items in output tuple")
-
-                def (sample_id, bam, bai) = outputs
-
-                assert sample_id == 'test'
-                println("\n* Sample ID is outputted correctly")
-
-                assert path(bam.toString()).exists()
-                assert path(bai.toString()).exists()
-                println("\n* All files found and exist")
-
-                
-            }
+            assert snapshot(process.out).match()
         }
 
     }

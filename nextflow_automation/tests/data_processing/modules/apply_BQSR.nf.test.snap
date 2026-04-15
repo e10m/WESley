@@ -1,0 +1,19 @@
+{
+    "Should apply BQSR to dummy BAMs without failures": {
+        "content": [
+            {
+                "0": [
+                    
+                ],
+                "bqsr_bams": [
+                    
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.10.2"
+        },
+        "timestamp": "2026-04-15T16:28:22.065376"
+    }
+}

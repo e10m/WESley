@@ -30,23 +30,8 @@ nextflow_process {
         }
 
         then {
-            // check the process succeeded without error messages
             assert process.success
-
-            // check outputs
-            with(process.out.trimmed_fastqs) {
-                def output_tuple = get(0)  // directly access the first emission
-                assert output_tuple.size() == 7  // verify tuple size of 7
-                
-                def (sample_id, lane, fastq_1, fastq_2, platform, seq_center, mouse_flag) = output_tuple
-                
-                // verify files exist
-                assert path(fastq_1).exists()
-                assert file(fastq_1).name == 'dummy_L001_val_1.fq.gz'
-
-                assert path(fastq_2).exists()
-                assert file(fastq_2).name == 'dummy_L001_val_2.fq.gz'
-            }
+            assert snapshot(process.out).match()
         }
     }
 }
