@@ -17,7 +17,7 @@ process MARK_DUPES {
     label 'shortTime'
 
     input:
-    tuple val(sample_id), path(sorted_bams)
+    tuple val(sample_id), path(sorted_bams, stageAs: "?/*")
     
     output:
     tuple val(sample_id), path("${sample_id}.MarkDuplicate.bam"), path("${sample_id}.MarkDuplicate.bam.bai"), emit: mark_dupe_bams
