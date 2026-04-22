@@ -28,7 +28,15 @@ nextflow_process {
         then {
             assert process.success
             assert process.out.size() > 0
-            assert snapshot(process.out).match()
+            with(process.out[0][0]) {
+                assert size() == 6
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.mutect2.paired.vcf'
+                assert file(get(4)).name == 'test.read-orientation-model.tar.gz'
+                assert file(get(5)).name == 'test.mutect2.paired.vcf.stats'
+            }
         }
 
     }
@@ -56,9 +64,15 @@ nextflow_process {
         then {
             assert process.success
             assert process.out.size() > 0
-            assert snapshot(process.out).match()
+            with(process.out[0][0]) {
+                assert size() == 6
+                assert get(0) == 'test'
+                assert get(1) == 'testT'
+                assert get(2) == 'testN'
+                assert file(get(3)).name == 'test.mutect2.tumorOnly.vcf'
+                assert file(get(4)).name == 'test.read-orientation-model.tar.gz'
+                assert file(get(5)).name == 'test.mutect2.tumorOnly.vcf.stats'
+            }
         }
-
     }
-
 }
