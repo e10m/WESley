@@ -19,6 +19,8 @@ process CREATE_MAF {
     input:
     tuple val(sample_id), path(vcf)
     path ref_fasta
+    path ref_fasta_index
+    path ref_dict
 
     output:
     tuple val(sample_id), path("*.maf")
