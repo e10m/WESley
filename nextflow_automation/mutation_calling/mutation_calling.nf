@@ -93,7 +93,7 @@ def parameter_validation() {
 
 
 // main workflow
-workflow MUTATION_CALLING {
+workflow {
     // Show help message if requested
     if (params.help) {
         help_message()
@@ -148,8 +148,8 @@ workflow MUTATION_CALLING {
     .set { samples }
 
     // run Mutect2 steps defined by GATK best practices
-    mutect2_calls = MUTECT2_CALL(bams, ref_fasta, ref_fasta_index, gnomad_vcf, gnomad_vcf_index, interval_list)
-    pileup_summaries = GET_PILEUP_SUMMARIES(bams, ref_fasta, ref_fasta_index, contamination_vcf, contamination_vcf_index, interval_list)
+    mutect2_calls = MUTECT2_CALL(bams, ref_fasta, ref_fasta_index, ref_dict, gnomad_vcf, gnomad_vcf_index, interval_list)
+    pileup_summaries = GET_PILEUP_SUMMARIES(bams, ref_fasta, ref_fasta_index, ref_dict, contamination_vcf, contamination_vcf_index, interval_list)
     contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
     orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
 
@@ -164,10 +164,10 @@ workflow MUTATION_CALLING {
     mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index, ref_dict)
 
     // run MuSE variant caller
-    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, muse_dbsnp)
+    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, ref_dict, muse_dbsnp)
 
     // run VarScan2 variant caller
-    pileups = PILEUP(samples.paired, ref_fasta, ref_fasta_index)
+    pileups = PILEUP(samples.paired, ref_fasta, ref_fasta_index, ref_dict)
     varscan2_raw_vcfs = VARSCAN2(pileups)
 
     // merge the varscan2 vcfs
@@ -183,13 +183,13 @@ workflow MUTATION_CALLING {
     selected_vcfs = SELECT_VARIANTS(compressed_vcfs)
 
     // annotate for biological effects via VEP
-    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, vep_cache)
+    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
 
     // change the column names in the vcf for standardization
     reheadered_vcfs = REHEADER(vep_annotated_vcfs)
 
     // generate MAF files
-    maf_files = CREATE_MAF(reheadered_vcfs, ref_fasta)
+    maf_files = CREATE_MAF(reheadered_vcfs, ref_fasta, ref_fasta_index, ref_dict)
 
     // grep and keep only tert promoter mutations
     KEEP_TERTP(maf_files)

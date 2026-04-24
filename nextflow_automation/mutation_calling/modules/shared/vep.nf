@@ -20,6 +20,7 @@ process VEP {
     tuple val(sample_id), val(tumor_id), val(normal_id), path(selected_vcf), path(index_file)
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
     path vep_cache
 
     output:

@@ -17,6 +17,7 @@ process MUSE {
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam, stageAs: "normal.bam"), path(normal_bai, stageAs: "normal.bai")
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
     path muse_dbsnp
 
     output:

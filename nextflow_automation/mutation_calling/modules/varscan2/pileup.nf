@@ -14,6 +14,7 @@ process PILEUP {
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam, stageAs: "normal.bam"), path(normal_bai, stageAs: "normal.bai")
     path ref_fasta
     path ref_fasta_index
+    path ref_dict
 
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.pileup")
