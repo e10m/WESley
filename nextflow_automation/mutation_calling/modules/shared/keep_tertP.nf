@@ -38,7 +38,7 @@ process KEEP_TERTP {
 
     """
     # maintain header
-    grep "^#\|^Hugo_Symbol" $maf > $output_file || true
+    grep "^#\\|^Hugo_Symbol" $maf > $output_file || true
 
     # keep only TERT promoter mutations
     grep "TERT" $maf | grep "upstream_gene_variant" >> $output_file || true
