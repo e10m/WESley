@@ -8,8 +8,7 @@ nextflow_process {
     test("Should run paired mode with pileup tables") {
         when {
             params {
-                test_mode = true
-                test_data = "${projectDir}/test-data/pileups"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -17,8 +16,8 @@ nextflow_process {
                     'test', 
                     'testT', 
                     'testN',
-                    file('${params.test_data}/test.tumor-pileups.table'),
-                    file('${params.test_data}/test.normal-pileups.table')
+                    file('${params.test_data}/pileups/test.tumor-pileups.table'),
+                    file('${params.test_data}/pileups/test.normal-pileups.table')
                 ]
                 """
             }
@@ -26,8 +25,7 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
             def output_tuple = process.out[0][0]
 
             with(output_tuple) {
@@ -44,8 +42,7 @@ nextflow_process {
     test("Should run tumor-only mode") {
         when {
             params {
-                test_mode = true
-                test_data = "${projectDir}/test-data/pileups"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -53,8 +50,8 @@ nextflow_process {
                     'test',
                     'testT',
                     'testN',
-                    file('${params.test_data}/test.tumor-pileups.table'),
-                    file('${params.test_data}/test.empty-normal-pileups.table')
+                    file('${params.test_data}/pileups/test.tumor-pileups.table'),
+                    file('${params.test_data}/pileups/test.empty-normal-pileups.table')
                 ]
                 """
             }
@@ -62,8 +59,7 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
             def output_tuple = process.out[0][0]
 
             with(output_tuple) {

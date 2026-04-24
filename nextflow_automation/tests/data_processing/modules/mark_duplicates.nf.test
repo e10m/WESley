@@ -7,16 +7,15 @@ nextflow_process {
     test("Should mark the duplicates without failures") {
 
         when {
-            params{
-                test_data = "${projectDir}/test-data"
-                ref_dir = "${params.test_data}/references"
+            params {
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
                 input[0] = [
                     'test',
-                    [ 
-                        file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true), 
+                    [
+                        file("${params.test_data}/bams/chr22/test.paired_end.sorted.bam", checkIfExists: true),
                         file("${params.test_data}/bams/chr22/test2.paired_end.sorted.bam", checkIfExists: true)
                     ]
                 ]
@@ -26,6 +25,7 @@ nextflow_process {
 
         then {
             assert process.success
+            assert process.out.size() > 0
             println("\n* Duplicates marked successfully")
 
             with(process.out.mark_dupe_bams) {
@@ -42,8 +42,6 @@ nextflow_process {
                 assert path(bam.toString()).exists()
                 assert path(bai.toString()).exists()
                 println("\n* All files found and exist")
-
-                
             }
         }
 

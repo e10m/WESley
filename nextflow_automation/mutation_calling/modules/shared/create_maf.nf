@@ -1,4 +1,4 @@
-/* 
+/*
 create_maf.nf module
 
 This module uses the vcf2maf.pl script to convert the vep-annotated
@@ -12,12 +12,13 @@ process CREATE_MAF {
     label 'lowCpu'
     label 'lowMem'
     label 'medTime'
-    publishDir "${params.output_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*maf*"
-    publishDir "${params.output_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*maf*"
-    publishDir "${params.output_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*maf*"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/raw_maf", mode: 'copy', pattern: "*mutect2*maf*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/raw_maf", mode: 'copy', pattern: "*MuSE*maf*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/raw_maf", mode: 'copy', pattern: "*varscan2*maf*"
 
     input:
     tuple val(sample_id), path(vcf)
+    path ref_fasta
 
     output:
     tuple val(sample_id), path("*.maf")
@@ -46,7 +47,7 @@ process CREATE_MAF {
             --output-maf "\$OUTPUT_NAME" \
             --tumor-id ${sample_id} \
             --vcf-tumor-id ${sample_id} \
-            --ref-fasta /references/Homo_sapiens_assembly38.fasta \
+            --ref-fasta ${ref_fasta} \
             --ncbi-build hg38 \
             --maf-center NathansonLab
 
@@ -61,7 +62,7 @@ process CREATE_MAF {
             --normal-id "NORMAL" \
             --vcf-tumor-id "TUMOR" \
             --vcf-normal-id "NORMAL" \
-            --ref-fasta /references/Homo_sapiens_assembly38.fasta \
+            --ref-fasta ${ref_fasta} \
             --ncbi-build hg38 \
             --maf-center NathansonLab
     fi

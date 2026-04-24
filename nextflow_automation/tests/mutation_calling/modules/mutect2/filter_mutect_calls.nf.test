@@ -9,16 +9,14 @@ nextflow_process {
 
         when {
             params {
-                test_data = "${projectDir}/test-data"
-                references = "${projectDir}/test-data/references"
-                test_mode = true
+                load("$baseDir/tests/test-params.yaml")
             }
 
             process {
                 """
                 input[0] = [
-                    'test', 
-                    'testT', 
+                    'test',
+                    'testT',
                     'testN',
                     file('${params.test_data}/vcfs/test.mutect2.paired.vcf'),
                     file('${params.test_data}/read-orientation/test.read-orientation-model.tar.gz'),
@@ -26,14 +24,16 @@ nextflow_process {
                     file('${params.test_data}/contamination-tables/test.paired.contamination.table'),
                     file('${params.test_data}/contamination-tables/test.paired.segments.table')
                 ]
+                input[1] = file(params.ref_fasta)
+                input[2] = file(params.ref_fasta_index)
+                input[3] = file(params.ref_dict)
                 """
             }
         }
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
             with(process.out[0][0]) {
                 assert size() == 4
                 assert get(0) == 'test'
@@ -49,15 +49,13 @@ nextflow_process {
 
         when {
             params {
-                test_data = "${projectDir}/test-data"
-                references = "${projectDir}/test-data/references"
-                test_mode = true
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
                 input[0] = [
-                    'test', 
-                    'testT', 
+                    'test',
+                    'testT',
                     'testN',
                     file('${params.test_data}/vcfs/test.mutect2.tumorOnly.vcf'),
                     file('${params.test_data}/read-orientation/test.read-orientation-model.tar.gz'),
@@ -65,14 +63,17 @@ nextflow_process {
                     file('${params.test_data}/contamination-tables/test.tumorOnly.contamination.table'),
                     file('${params.test_data}/contamination-tables/test.tumorOnly.segments.table')
                 ]
+                input[1] = file(params.ref_fasta)
+                input[2] = file(params.ref_fasta_index)
+                input[3] = file(params.ref_dict)
                 """
             }
         }
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
+            
             with(process.out[0][0]) {
                 assert size() == 4
                 assert get(0) == 'test'

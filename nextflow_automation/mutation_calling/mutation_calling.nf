@@ -21,6 +21,7 @@ include { ONCOKB } from './modules/shared/oncokb.nf'
 include { MUTECT2_PON } from './modules/mutect2_pon/mutect2_pon.nf'
 include { GENOMICS_DB_IMPORT } from './modules/mutect2_pon/genomics_db_import.nf'
 include { CREATE_PON } from './modules/mutect2_pon/create_pon.nf'
+include { KEEP_TERTP } from './modules/shared/keep_tertP.nf'
 
 
 // define functions for user guidance
@@ -39,7 +40,6 @@ def help_message() {
 
     Optional arguments:
     --cpus                        Number of CPUs to use for processing (default: 30)
-    --test_mode                   Enable test mode with reduced dataset (default: false)
     --help                        Show this help message and exit
 
     Examples:
@@ -106,6 +106,19 @@ workflow MUTATION_CALLING {
         exit 1
     }
 
+    // stage reference files from params
+    ref_fasta           = file(params.ref_fasta)
+    ref_fasta_index     = file(params.ref_fasta_index)
+    ref_dict            = file(params.ref_dict)
+    gnomad_vcf          = file(params.gnomad_vcf)
+    gnomad_vcf_index    = file(params.gnomad_vcf_index)
+    contamination_vcf   = file(params.contamination_vcf)
+    contamination_vcf_index = file(params.contamination_vcf_index)
+    muse_dbsnp          = file(params.muse_dbsnp)
+    interval_list       = file(params.interval_list)
+    nonsynonymous_list  = file(params.nonsynonymous_list)
+    vep_cache           = file(params.vep_cache)
+
     // logging workflow details
     log_workflow()
     
@@ -135,30 +148,30 @@ workflow MUTATION_CALLING {
     .set { samples }
 
     // run Mutect2 steps defined by GATK best practices
-    mutect2_calls = MUTECT2_CALL(bams)
-    pileup_summaries = GET_PILEUP_SUMMARIES(bams)
+    mutect2_calls = MUTECT2_CALL(bams, ref_fasta, ref_fasta_index, gnomad_vcf, gnomad_vcf_index, interval_list)
+    pileup_summaries = GET_PILEUP_SUMMARIES(bams, ref_fasta, ref_fasta_index, contamination_vcf, contamination_vcf_index, interval_list)
     contamination_data = CALCULATE_CONTAMINATION(pileup_summaries)
     orientation_models = LEARN_READ_ORIENTATION(mutect2_calls)
-    
+
     // join contamination and orientation data for filtering
     filter_input = orientation_models
         .join(contamination_data, by: [0, 1, 2])
         .map { sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table ->
             tuple(sample_id, tumor_id, normal_id, unfiltered_vcf, m2_stats, orientation_model, contamination_table, segments_table)
         }
-    
+
     // filter Mutect2 calls
-    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input)
+    mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index, ref_dict)
 
     // run MuSE variant caller
-    muse_vcfs = MUSE(samples.paired)
+    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, muse_dbsnp)
 
     // run VarScan2 variant caller
-    pileups = PILEUP(samples.paired)
+    pileups = PILEUP(samples.paired, ref_fasta, ref_fasta_index)
     varscan2_raw_vcfs = VARSCAN2(pileups)
 
     // merge the varscan2 vcfs
-    varscan2_vcfs = MERGE_VCFS(varscan2_raw_vcfs)
+    varscan2_vcfs = MERGE_VCFS(varscan2_raw_vcfs, ref_dict)
 
     // concatenate all the data channels for vcfs
     filtered_vcfs = mutect2_vcfs.concat(muse_vcfs).concat(varscan2_vcfs)
@@ -170,16 +183,19 @@ workflow MUTATION_CALLING {
     selected_vcfs = SELECT_VARIANTS(compressed_vcfs)
 
     // annotate for biological effects via VEP
-    vep_annotated_vcfs = VEP(selected_vcfs)
+    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, vep_cache)
 
     // change the column names in the vcf for standardization
     reheadered_vcfs = REHEADER(vep_annotated_vcfs)
 
     // generate MAF files
-    maf_files = CREATE_MAF(reheadered_vcfs)
+    maf_files = CREATE_MAF(reheadered_vcfs, ref_fasta)
+
+    // grep and keep only tert promoter mutations
+    KEEP_TERTP(maf_files)
 
     // filter out synonymous mutations
-    nonsynonymous_mutations = KEEP_NONSYNONYMOUS(maf_files)
+    nonsynonymous_mutations = KEEP_NONSYNONYMOUS(maf_files, nonsynonymous_list)
 
     // rename and reformat the files
     renamed_files = RENAME_HG38(nonsynonymous_mutations)
@@ -201,6 +217,13 @@ workflow CREATE_M2_PON {
         exit 1
     }
 
+    // stage reference files from params
+    ref_fasta           = file(params.ref_fasta)
+    ref_fasta_index     = file(params.ref_fasta_index)
+    gnomad_vcf          = file(params.gnomad_vcf)
+    gnomad_vcf_index    = file(params.gnomad_vcf_index)
+    interval_list       = file(params.interval_list)
+
     // logging workflow details
     log_workflow()
 
@@ -215,14 +238,14 @@ workflow CREATE_M2_PON {
     .set { normal_bams }
 
     // main workflow
-    normal_vcfs = MUTECT2_PON(normal_bams)
+    normal_vcfs = MUTECT2_PON(normal_bams, ref_fasta, ref_fasta_index)
 
     // collect vcfs and pass to genomics_db_import
     normal_vcfs
         .collect()
         .set { all_vcfs }
 
-    genomics_db = GENOMICS_DB_IMPORT(all_vcfs)
-    
-    CREATE_PON(genomics_db)
+    genomics_db = GENOMICS_DB_IMPORT(all_vcfs, ref_fasta, ref_fasta_index, interval_list)
+
+    CREATE_PON(genomics_db, ref_fasta, ref_fasta_index, gnomad_vcf, gnomad_vcf_index, interval_list)
 }

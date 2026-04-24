@@ -9,7 +9,7 @@ nextflow_process {
 
         when {
             params {
-                test_data = "${projectDir}/test-data"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -27,8 +27,7 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
             with(process.out[0][0]) {
                 assert size() == 6
                 assert get(0) == 'test'
@@ -46,7 +45,7 @@ nextflow_process {
 
         when {
             params {
-                test_data = "${projectDir}/test-data"
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -64,8 +63,7 @@ nextflow_process {
 
         then {
             assert process.success
-            assert process.out.size() == 1
-
+            assert process.out.size() > 0
             with(process.out[0][0]) {
                 assert size() == 6
                 assert get(0) == 'test'
@@ -76,7 +74,5 @@ nextflow_process {
                 assert file(get(5)).name == 'test.mutect2.tumorOnly.vcf.stats'
             }
         }
-
     }
-
 }

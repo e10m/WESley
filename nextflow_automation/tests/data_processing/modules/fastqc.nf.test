@@ -7,9 +7,8 @@ nextflow_process {
 
     test("Should run FASTQC checks without failures") {
         when {
-            params{
-                test_data = "${projectDir}/test-data"
-                ref_dir = "${projectDir}/test-data/references"
+            params {
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 // required inputs for test data
@@ -28,9 +27,8 @@ nextflow_process {
         }
 
         then {
-            // check the process succeeded without error messages
             assert process.success
-
+            assert process.out.size() > 0
             // check outputs
             with(process.out.fastqc_files) {
                 def files = get(0)  // directly access the first emission
@@ -53,8 +51,6 @@ nextflow_process {
                 zip_files.each { file ->
                     assert path(file).exists()
                 }
-
-                println("\n* All files exist")
             }
         }
     }

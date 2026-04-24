@@ -28,7 +28,6 @@ workflow DATA_PROCESSING {
         --output_dir                  Path to the output directory to publish results
         --ref_dir                     Path to the reference directory
         --metadata                    Path to metadata file
-        --batch_name                  Name of the batch for output organization
         --seq_center                  Sequencing center
         --platform                    Sequencing platform (eg: Illumina HiSeq, Illumina NovaSeq, etc.)
 

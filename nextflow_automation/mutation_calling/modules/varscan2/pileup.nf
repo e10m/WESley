@@ -1,4 +1,4 @@
-/* 
+/*
 pileup.nf module
 
 This module takes temporary SAM files and converts them to temporary BAM files
@@ -12,7 +12,9 @@ process PILEUP {
 
     input:
     tuple val(sample_id), val(tumor_id), path(tumor_bam), path(tumor_bai), path(tumor_sbi), val(normal_id), path(normal_bam, stageAs: "normal.bam"), path(normal_bai, stageAs: "normal.bai")
-    
+    path ref_fasta
+    path ref_fasta_index
+
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.pileup")
 
@@ -20,7 +22,7 @@ process PILEUP {
     """
     # create pileup text file
     samtools mpileup -B \
-    -f "/references/Homo_sapiens_assembly38.fasta" \
+    -f ${ref_fasta} \
     -q 1 \
     -o ${sample_id}.pileup \
     $normal_bam $tumor_bam

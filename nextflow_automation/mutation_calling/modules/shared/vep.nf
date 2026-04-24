@@ -1,11 +1,10 @@
-/* 
+/*
 vep.nf module
 
 This module inputs the selected variant vcf files and annotates them for biological
 effects, phenotype association, allele frequency reporting, and deleteriousness predictions using VEP.
 
-Ensembl VEP Version: 106.
-VEP Cache Version: 103.
+Ensembl VEP Version: 115.
 */
 
 process VEP {
@@ -19,6 +18,9 @@ process VEP {
 
     input:
     tuple val(sample_id), val(tumor_id), val(normal_id), path(selected_vcf), path(index_file)
+    path ref_fasta
+    path ref_fasta_index
+    path vep_cache
 
     output:
     tuple val(sample_id), path("*vep.vcf")
@@ -42,8 +44,8 @@ process VEP {
     --fork ${task.cpus} \
     --cache \
     --offline \
-    --fasta /references/Homo_sapiens_assembly38.fasta \
-    --dir_cache /opt/vep/.vep \
-    --cache_version 103
+    --fasta ${ref_fasta} \
+    --dir_cache ${vep_cache} \
+    --cache_version 115
     """
 }

@@ -1,0 +1,27 @@
+{
+    "Should generate recalibration table without failures": {
+        "content": [
+            {
+                "0": [
+                    [
+                        "dummy",
+                        "dummy_L001.sorted.bam:md5,beecafbdcfceb17a8eaf48669a34f1e1",
+                        "dummy.recal_data.table:md5,c38e5c25e24ced2c98c908cf89328ecf"
+                    ]
+                ],
+                "recal_table": [
+                    [
+                        "dummy",
+                        "dummy_L001.sorted.bam:md5,beecafbdcfceb17a8eaf48669a34f1e1",
+                        "dummy.recal_data.table:md5,c38e5c25e24ced2c98c908cf89328ecf"
+                    ]
+                ]
+            }
+        ],
+        "meta": {
+            "nf-test": "0.9.3",
+            "nextflow": "25.04.6"
+        },
+        "timestamp": "2026-04-15T16:42:44.005357"
+    }
+}

@@ -7,9 +7,8 @@ nextflow_process {
 
     test("Should align via bwa-mem without failures") {
         when {
-            params{
-                test_data = "${projectDir}/test-data/fastqs"
-                ref_dir = "${projectDir}/test-data/references"
+            params {
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 // required inputs for test data
@@ -17,8 +16,8 @@ nextflow_process {
                 input[0] = [
                     'dummy',
                     'L001',
-                    file("${params.test_data}/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
-                    file("${params.test_data}/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/fastqs/dummy_t_R1_xxx.fastq.gz", checkIfExists: true),
+                    file("${params.test_data}/fastqs/dummy_t_R2_xxx.fastq.gz", checkIfExists: true),
                     'illumina_novaseq_x',
                     'tcgb',
                     false
@@ -27,24 +26,10 @@ nextflow_process {
             }
         }
 
-        then {            
-            // check the process succeeded without error messages
+        then {
             assert process.success
-            println("\n* The alignment via bwa-mem succeeded")
-
-            with(process.out.temp_bams) {
-                def output_tuple = get(0)  // access first emission
-
-                assert output_tuple.size() == 2
-                println("\n* 2 outputs correctly detected")
-
-                assert output_tuple[0] == 'dummy'
-                println("\n* Correct sample id output")
-
-                assert file(output_tuple[1]).name == 'dummy_L001.sorted.bam'
-                assert file(output_tuple[1]).exists()
-                println("\n* Correctly named output file exists")
-            }
+            assert process.out.size() > 0
+            assert snapshot(process.out).match()
         }
     }
 }

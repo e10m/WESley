@@ -1,6 +1,5 @@
 **/metadata.sh
 **/metadata/
-**/*.sh
 **/*CLAUDE*
 **/.nf-test
 **/.nf-test.log
@@ -9,3 +8,4 @@
 **/.pytest*
 **/__pycache__/
 **/*.pyc
+**/docs

@@ -8,9 +8,8 @@ nextflow_process {
     test("Should add the metadata tags to BAM without failures") {
 
         when {
-            params{
-                test_data = "${projectDir}/test-data"
-                ref_dir = "${params.test_data}/references"
+            params {
+                load("$baseDir/tests/test-params.yaml")
             }
             process {
                 """
@@ -25,21 +24,8 @@ nextflow_process {
 
         then {
             assert process.success
-            println("\n* Process completed successfully; metadata tags added to BAM")
-
-            with(process.out.tagged_bams) {
-                def (sample_id, bam, bai) = get(0)
-
-                assert get(0).size() == 3
-                println("\n* 3 items in output tuple")
-
-                assert sample_id == 'test'
-                println("\n* Sample ID is outputted correctly")
-
-                assert path(bam.toString()).exists()
-                assert path(bai.toString()).exists()
-                println("\n* All files found and exist")
-            }
+            assert process.out.size() > 0
+            assert snapshot(process.out).match()
         }
     }
 }
