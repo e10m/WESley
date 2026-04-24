@@ -24,7 +24,7 @@ process KEEP_TERTP {
     def basename = file(maf).baseName
 
     // define output names
-    def output_file
+    def output_file = null
 
     if (basename.contains("mutect2.paired")) {
         output_file = "${sample_id}.mutect2.paired.vep.tertp.maf"
