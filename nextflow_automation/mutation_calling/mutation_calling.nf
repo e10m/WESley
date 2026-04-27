@@ -80,11 +80,6 @@ def parameter_validation() {
         exit 1
     }
 
-    if (!params.ref_dir) {
-        error "ERROR: --ref_dir parameter is required"
-        exit 1
-    }
-
     if (!params.interval_list) {
         error "ERROR: --interval_list parameter is required"
         exit 1
