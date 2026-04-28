@@ -19,6 +19,7 @@ import os
 import glob
 import re
 import argparse
+import json
 import polars as pl
 
 
@@ -80,96 +81,104 @@ def lookup_shortid(tcgb_id: str, metadata_subset: pl.DataFrame) -> str:
     short_id = metadata_row.get_column("Short ID").item()
     return short_id
 
-def main():
-    # initialize argparser and the arguments
-    parser = argparse.ArgumentParser(description="Simple metadata sheet generator for the mutation calling portion of the WES pipeline")
+def build_manifest_local(bam_dir: str, metadata_sheet: str) -> list[dict]:
+    """Scan a local BAM directory and return a list of sample dicts.
 
-    parser.add_argument('-d','--bam_dir', type=str, required=True,
-                        help="Directory where the analysis ready BAM files are.")
-
-    parser.add_argument('-b', '--batch_name', type=str, required=True,
-                        help="Batch name for the WES data being analyzed.")
-
-    parser.add_argument('-o', '--output_dir', default='./', type=str, required=True,
-                        help='Directory to publish the output metadata tsv sheet.')
-
-    parser.add_argument('-m', '--metadata', type=str, required=True,
-                        help='Path to where the sequencing xls metadata sheet is')
-
-    args = parser.parse_args()
-
-    # input home directory
-    bam_dir = args.bam_dir
-    batch_name = args.batch_name
-    output_dir = args.output_dir
-    metadata = args.metadata
-
-    # find all BAM files
-    files = glob.glob(f"{bam_dir}/*.bam")
-
-    # initialize output file name
-    output_file = f"{output_dir}/{batch_name}_mc_manifest.tsv"
-
-    ### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
-    # read in the 'Sequencing Metadata MAIN' .xls file
-    metadata_df = pl.read_excel(metadata)
-
-    ### NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
-    # subset metadata df
+    Returns dicts with keys: sample_id, tumor_id, tumor_bam, tumor_bai,
+    tumor_sbi, normal_id, normal_bam, normal_bai.
+    Missing optional fields are None (not 'NO_FILE').
+    """
+    metadata_df = pl.read_excel(metadata_sheet)
     metadata_subset = metadata_df.select(["WES ID", "Short ID", "Sample Type", "Line", "DOES PT HAVE NRM?"])
     normals_df = metadata_subset.filter(pl.col("Sample Type") == "NRM")
 
-    # build data list from BAM files
-    data = []
+    files = glob.glob(f"{bam_dir}/*.bam")
+    samples = []
+
     for file in files:
         bam_file = os.path.basename(file)
         path = os.path.dirname(file)
 
-        # find BAI and SBI files
+        # Find index files — None when absent
         bai_files = glob.glob(f"{bam_dir}/{bam_file}*bai")
-        bai_file = bai_files[0] if bai_files else "NO_FILE"
+        bai_file = bai_files[0] if bai_files else None
         sbi_files = glob.glob(f"{bam_dir}/{bam_file}*sbi")
-        sbi_file = sbi_files[0] if sbi_files else "NO_FILE"
+        sbi_file = sbi_files[0] if sbi_files else None
 
-        # Extract sample ID from BAM filename (TCGB pattern or short ID pattern)
-        original_id = (tcgb_id[0] if (tcgb_id := re.search(r"^\d+\w*-\d+", bam_file))
-                       else short_id[0] if (short_id := re.search(r"\w+\d+", bam_file))
+        # Extract sample ID from BAM filename (TCGB or short ID pattern)
+        tcgb_match = re.search(r"^\d+\w*-\d+", bam_file)
+        short_match = re.search(r"\w+\d+", bam_file)
+        original_id = (tcgb_match.group(0) if tcgb_match
+                       else short_match.group(0) if short_match
                        else None)
+        if not original_id:
+            continue
 
-        # Convert TCGB ID to short ID if needed; otherwise use extracted ID directly
-        short_id = lookup_shortid(original_id, metadata_subset) if tcgb_id else original_id
+        short_id = lookup_shortid(original_id, metadata_subset) if tcgb_match else original_id
 
-        # look up normal information using short ID
         normal_info = find_normal_info(short_id, metadata_subset, normals_df, bam_dir)
 
-        # append the row data
-        data.append({
-            "Sample_ID": original_id,
-            "Tumor_ID": short_id,
-            "Tumor_BAM": f"{path}/{bam_file}",
-            "Tumor_BAI": bai_file,
-            "Tumor_SBI": sbi_file,
-            "Normal_ID": normal_info["Normal_ID"],
-            "Normal_BAM": normal_info["Normal_BAM"],
-            "Normal_BAI": normal_info["Normal_BAI"]
+        samples.append({
+            "sample_id": original_id,
+            "tumor_id": short_id,
+            "tumor_bam": f"{path}/{bam_file}",
+            "tumor_bai": bai_file,
+            "tumor_sbi": sbi_file,
+            # Convert 'NO_FILE' sentinel to None for JSON schema
+            "normal_id":  None if normal_info["Normal_ID"]  == "NO_FILE" else normal_info["Normal_ID"],
+            "normal_bam": None if normal_info["Normal_BAM"] == "NO_FILE" else normal_info["Normal_BAM"],
+            "normal_bai": None if normal_info["Normal_BAI"] == "NO_FILE" else normal_info["Normal_BAI"],
         })
 
+    # Remove rows where the tumor is incorrectly marked as its own normal
+    samples = [
+        s for s in samples
+        if not (s["normal_bam"] and s["tumor_id"] in s["normal_bam"])
+        and s["tumor_id"] != s["normal_id"]
+    ]
 
-    # convert data list to Polars DataFrame
-    df = pl.DataFrame(data)
+    return samples
 
-    # remove rows where the tumor is incorrectly marked as its own normal
-    df = df.filter(
-        ~(
-            pl.col("Normal_BAM").str.contains(pl.col("Tumor_ID")) |
-            (pl.col("Tumor_ID") == pl.col("Normal_ID"))
-        )
+def main():
+    parser = argparse.ArgumentParser(
+        description="Manifest generator for the WESley mutation calling pipeline"
     )
+    parser.add_argument(
+        "--platform", choices=["local", "omics"], required=True,
+        help="Execution platform: 'local' scans a BAM directory; 'omics' queries a HealthOmics Sequence Store"
+    )
+    parser.add_argument(
+        "-d", "--bam_dir", type=str,
+        help="(local only) Directory containing analysis-ready BAM files"
+    )
+    parser.add_argument(
+        "-m", "--metadata", type=str, required=True,
+        help="Path to sequencing Excel metadata sheet"
+    )
+    parser.add_argument(
+        "-o", "--output", type=str, required=True,
+        help="Output path for manifest JSON (e.g. manifest.json)"
+    )
+    # HealthOmics-only args — validated at runtime if --platform omics
+    parser.add_argument("--store_id", type=str, help="(omics only) HealthOmics Sequence Store ID")
+    parser.add_argument("--region",   type=str, help="(omics only) AWS region of the Sequence Store")
 
-    # write out file
-    df.write_csv(output_file, separator="\t")
+    args = parser.parse_args()
 
-    print(f"Writing metadata sheet to: {output_file}")
+    if args.platform == "local":
+        if not args.bam_dir:
+            parser.error("--bam_dir is required when --platform local")
+        samples = build_manifest_local(args.bam_dir, args.metadata)
+    else:
+        if not args.store_id or not args.region:
+            parser.error("--store_id and --region are required when --platform omics")
+        samples = build_manifest_omics(args.store_id, args.region, args.metadata)
+
+    manifest = {"samples": samples}
+    with open(args.output, "w") as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f"Manifest written to: {args.output} ({len(samples)} samples)")
 
 
 if __name__ == "__main__":
