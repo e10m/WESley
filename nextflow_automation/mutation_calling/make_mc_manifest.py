@@ -1,15 +1,28 @@
 """
 make_mc_manifest.py module
 
-This python script creates a metadata sheet which matches the tumor BAM files and their indices
-to their respective matching normals (if available).
+Generates a JSON manifest of tumor/normal BAM pairs for the WESley mutation calling pipeline.
+Supports two backends selectable via --platform:
+  - local: scans a BAM directory on the local filesystem
+  - omics: queries an AWS HealthOmics Sequence Store via boto3
 
-NOTE: The metadata sheet being read from is subject to change, please change column names accordingly!
+Output format (manifest.json):
+    {
+      "samples": [
+        {
+          "sample_id":  "23-028",
+          "tumor_id":   "GBX1406",
+          "tumor_bam":  "/path/to/23-028.BQSR.bam",
+          "tumor_bai":  "/path/to/23-028.BQSR.bam.bai",
+          "tumor_sbi":  "/path/to/23-028.BQSR.bam.sbi",
+          "normal_id":  "PT406.BLD",
+          "normal_bam": "/path/to/normals/PT406.BLD.bam",
+          "normal_bai": "/path/to/normals/PT406.BLD.bam.bai"
+        }
+      ]
+    }
 
-The format follows as below:
-    eg:
-    Sample_ID   Tumor_ID   Tumor_BAM   Tumor_BAI   Tumor_SBI   Normal_ID    Normal_BAM
-    23-028  GBX1406 23-028.BQSR.bam 23-028.BQSR.bam.bai 23-028.BQSR.bam.sbi PT406.BLD   23B-036.recalibration.sort.bam
+Missing optional fields (tumor_bai, tumor_sbi, normal_id, normal_bam, normal_bai) are null.
 
 Python version: 3.10+
 Polars version: 1.34.0

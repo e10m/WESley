@@ -7,6 +7,7 @@ Python version: 3.10+
 Polars version: 1.34.0
 PyTest version: 7.4.4
 """
+import json
 import pytest
 import polars as pl
 import sys
@@ -189,7 +190,6 @@ def test_main(sample_metadata):
         with patch.object(sys, "argv", mock_args):
             main()
 
-        import json
         assert os.path.exists(output_file), "manifest.json was not created"
         with open(output_file) as f:
             data = json.load(f)
