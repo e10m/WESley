@@ -30,17 +30,23 @@ def help_message() {
 
     The typical command for running the pipeline is as follows:
 
-    nextflow -C <CONFIG_PATH> run mutation_calling.nf --output_dir <PATH> --ref_dir <PATH> --metadata <PATH> --interval_list <PATH> [OPTIONS]
+    nextflow -C <CONFIG_PATH> run mutation_calling.nf --output_dir <PATH> --ref_dir <PATH> -params-file manifest.json --interval_list <PATH> [OPTIONS]
 
     Required arguments:
     --output_dir                  Path to the output directory for results
     --ref_dir                     Path to the reference directory
-    --metadata                    Path to the metadata sheet created by 'make_mc_manifest.py'
+    -params-file                  Path to manifest JSON file produced by make_mc_manifest.py
     --interval_list               Path to interval list file for targeted analysis
 
     Optional arguments:
     --cpus                        Number of CPUs to use for processing (default: 30)
     --help                        Show this help message and exit
+
+    Generating the manifest (local):
+    python make_mc_manifest.py --platform local --bam_dir /path/to/bams --metadata metadata.xlsx --output manifest.json
+
+    Generating the manifest (HealthOmics):
+    python make_mc_manifest.py --platform omics --store_id <ID> --region <REGION> --metadata metadata.xlsx --output manifest.json
 
     Examples:
 
@@ -50,7 +56,7 @@ def help_message() {
         -entry <WORKFLOW_NAME> \\
         --output_dir /path/to/data \\
         --ref_dir /path/to/reference \\
-        --metadata /path/to/metadata \\
+        -params-file manifest.json \\
         --interval_list /path/to/interval_list
     """.stripIndent()
 }
@@ -96,8 +102,8 @@ workflow {
     }
     // validate parameters
     parameter_validation()
-    if (!params.metadata) {
-        error "ERROR: --metadata parameter is required"
+    if (!params.samples) {
+        error "ERROR: samples list is empty. Generate a manifest with make_mc_manifest.py and pass it via -params-file manifest.json"
         exit 1
     }
 
@@ -117,20 +123,20 @@ workflow {
     // logging workflow details
     log_workflow()
     
-    // channel in metadata and save as a set for downstream processes
+    // channel in samples from params.samples JSON array
     channel
-        .fromPath(params.metadata)
-        .splitCsv(header: true, sep: '\t')
-        .map { row ->
-            def sample_id  = row.Sample_ID
-            def tumor_id = row.Tumor_ID
-            def tumor_bam = row.Tumor_BAM
-            def tumor_bai = row.Tumor_BAI != 'NO_FILE' ? row.Tumor_BAI : []
-            def tumor_sbi = row.Tumor_SBI != 'NO_FILE' ? row.Tumor_SBI : []
-            def normal_id = row.Normal_ID
-            def normal_bam = row.Normal_BAM != 'NO_FILE' ? row.Normal_BAM : []
-            def normal_bai = row.Normal_BAI != 'NO_FILE' ? row.Normal_BAI : []
-            tuple(sample_id, tumor_id, tumor_bam, tumor_bai, tumor_sbi, normal_id, normal_bam, normal_bai)
+        .fromList(params.samples)
+        .map { s ->
+            tuple(
+                s.sample_id,
+                s.tumor_id,
+                file(s.tumor_bam),
+                s.tumor_bai  != null ? file(s.tumor_bai)  : [],
+                s.tumor_sbi  != null ? file(s.tumor_sbi)  : [],
+                s.normal_id  != null ? s.normal_id         : 'NO_FILE',
+                s.normal_bam != null ? file(s.normal_bam)  : [],
+                s.normal_bai != null ? file(s.normal_bai)  : []
+            )
         }
         .set { bams }
 
