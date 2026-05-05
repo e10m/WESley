@@ -125,7 +125,7 @@ workflow {
     
     // channel in samples from manifest JSON file
     Channel.fromPath(params.samples)
-        .splitJson(path: 'samples')
+        .splitJson()
         .map { s ->
             tuple(
                 s.sample_id,
