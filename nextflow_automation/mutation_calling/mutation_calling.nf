@@ -35,7 +35,7 @@ def help_message() {
     Required arguments:
     --output_dir                  Path to the output directory for results
     --ref_dir                     Path to the reference directory
-    -params-file                  Path to manifest JSON file produced by make_mc_manifest.py
+    --samples                     Path to manifest JSON file produced by make_mc_manifest.py
     --interval_list               Path to interval list file for targeted analysis
 
     Optional arguments:
@@ -56,7 +56,7 @@ def help_message() {
         -entry <WORKFLOW_NAME> \\
         --output_dir /path/to/data \\
         --ref_dir /path/to/reference \\
-        -params-file manifest.json \\
+        --samples manifest.json \\
         --interval_list /path/to/interval_list
     """.stripIndent()
 }
@@ -103,7 +103,7 @@ workflow {
     // validate parameters
     parameter_validation()
     if (!params.samples) {
-        error "ERROR: samples list is empty. Generate a manifest with make_mc_manifest.py and pass it via -params-file manifest.json"
+        error "ERROR: --samples is required. Generate a manifest with make_mc_manifest.py and pass it via --samples manifest.json"
         exit 1
     }
 
@@ -123,9 +123,9 @@ workflow {
     // logging workflow details
     log_workflow()
     
-    // channel in samples from params.samples JSON array
-    channel
-        .fromList(params.samples)
+    // channel in samples from manifest JSON file
+    Channel.fromPath(params.samples)
+        .splitJson(path: 'samples')
         .map { s ->
             tuple(
                 s.sample_id,
