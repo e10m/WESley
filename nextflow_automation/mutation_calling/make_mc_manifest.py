@@ -5,19 +5,22 @@ Generates a JSON manifest of tumor/normal BAM pairs for the WESley mutation call
 Supports two backends selectable via --platform:
   - local: scans a BAM directory on the local filesystem
   - omics: queries an AWS HealthOmics Sequence Store via boto3
+    - NOTE: Requires AWS credentials (env vars, ~/.aws/credentials, or IAM execution role)
+    - Tumor/normal classification and pairing are derived entirely from HealthOmics ReadSet
+      metadata (sampleId, subjectId) — no external metadata sheet required.
 
 Output format (manifest.json):
     {
       "samples": [
         {
-          "sample_id":  "23-028",
+          "sample_id":  "GBX1406",
           "tumor_id":   "GBX1406",
-          "tumor_bam":  "/path/to/23-028.BQSR.bam",
-          "tumor_bai":  "/path/to/23-028.BQSR.bam.bai",
-          "tumor_sbi":  "/path/to/23-028.BQSR.bam.sbi",
+          "tumor_bam":  "s3://omics-bucket/store/rs-001/source1.bam",
+          "tumor_bai":  "s3://omics-bucket/store/rs-001/source1.bam.bai",
+          "tumor_sbi":  null,
           "normal_id":  "PT406.BLD",
-          "normal_bam": "/path/to/normals/PT406.BLD.bam",
-          "normal_bai": "/path/to/normals/PT406.BLD.bam.bai"
+          "normal_bam": "s3://omics-bucket/store/rs-002/source1.bam",
+          "normal_bai": "s3://omics-bucket/store/rs-002/source1.bam.bai"
         }
       ]
     }
@@ -152,6 +155,63 @@ def build_manifest_local(bam_dir: str, metadata_sheet: str) -> list[dict]:
 
     return samples
 
+def build_manifest_omics(store_id: str, region: str) -> list[dict]:
+    """Query a HealthOmics Sequence Store and return a list of sample dicts.
+
+    Tumor/normal classification uses a regex on sampleId (BLD, NRM, CD45 → normal).
+    Tumor/normal pairing uses subjectId as the cell-line key.
+    No external metadata sheet is required.
+
+    boto3 credential chain is used automatically:
+      1. AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY env vars
+      2. ~/.aws/credentials (from `aws configure` or SSO)
+      3. IAM execution role (automatic inside HealthOmics workflow runs)
+    """
+    import boto3
+
+    # connect to HealthOmics client, add readset metadata into list
+    omics = boto3.client("omics", region_name=region)
+    paginator = omics.get_paginator("list_read_sets")
+    all_readsets = []
+    for page in paginator.paginate(sequenceStoreId=store_id):
+        all_readsets.extend(page["readSets"])
+
+    tumors = []
+    normals = {}  # subjectId → {sample_id, bam_uri, bai_uri}
+
+    # parse metadata from readset JSONs
+    for rs in all_readsets:
+        meta = omics.get_read_set_metadata(id=rs["id"], sequenceStoreId=store_id)
+        sample_id  = meta.get("sampleId")
+        subject_id = meta.get("subjectId")
+        files      = meta.get("files", {})
+        bam_uri    = files.get("source1", {}).get("s3Access", {}).get("s3Uri")
+        bai_uri    = files.get("index",   {}).get("s3Access", {}).get("s3Uri")
+
+        # classify — normal if sampleId contains BLD, NRM, or CD45
+        if re.search(r"BLD|NRM|CD45|PBMC", sample_id or "", re.IGNORECASE):
+            normals[subject_id] = {"sample_id": sample_id, "bam_uri": bam_uri, "bai_uri": bai_uri}
+        else:
+            tumors.append({"sample_id": sample_id, "subject_id": subject_id, "bam_uri": bam_uri, "bai_uri": bai_uri})
+
+    # match each tumor to a normal sharing the same subjectId
+    samples = []
+    for tumor in tumors:
+        normal = normals.get(tumor["subject_id"])
+        samples.append({
+            "sample_id": tumor["sample_id"],
+            "tumor_id":  tumor["sample_id"],
+            "tumor_bam": tumor["bam_uri"],
+            "tumor_bai": tumor["bai_uri"],
+            "tumor_sbi": None,  # HealthOmics Sequence Store does not produce SBI files
+            "normal_id":  normal["sample_id"] if normal else None,
+            "normal_bam": normal["bam_uri"]    if normal else None,
+            "normal_bai": normal["bai_uri"]    if normal else None,
+        })
+
+    return samples
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Manifest generator for the WESley mutation calling pipeline"
@@ -165,8 +225,8 @@ def main():
         help="(local only) Directory containing analysis-ready BAM files"
     )
     parser.add_argument(
-        "-m", "--metadata", type=str, required=True,
-        help="Path to sequencing Excel metadata sheet"
+        "-m", "--metadata", type=str,
+        help="(local only) Path to sequencing Excel metadata sheet"
     )
     parser.add_argument(
         "-o", "--output", type=str, required=True,
@@ -181,11 +241,13 @@ def main():
     if args.platform == "local":
         if not args.bam_dir:
             parser.error("--bam_dir is required when --platform local")
+        if not args.metadata:
+            parser.error("--metadata is required when --platform local")
         samples = build_manifest_local(args.bam_dir, args.metadata)
     else:
         if not args.store_id or not args.region:
             parser.error("--store_id and --region are required when --platform omics")
-        samples = build_manifest_omics(args.store_id, args.region, args.metadata)
+        samples = build_manifest_omics(args.store_id, args.region)
 
     manifest = {"samples": samples}
     with open(args.output, "w") as f:

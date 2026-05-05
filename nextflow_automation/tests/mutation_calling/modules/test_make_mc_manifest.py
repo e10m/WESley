@@ -16,7 +16,7 @@ import tempfile
 import os
 from pathlib import Path
 from nextflow_automation.mutation_calling.make_mc_manifest import (
-    find_normal_info, lookup_shortid, build_manifest_local, main
+    find_normal_info, lookup_shortid, build_manifest_local, build_manifest_omics, main
 )
 
 
@@ -156,6 +156,81 @@ def test_build_manifest_local(sample_metadata):
         assert s2["normal_id"] is None
         assert s2["normal_bam"] is None
         assert s2["normal_bai"] is None
+
+
+def test_build_manifest_omics():
+    """build_manifest_omics classifies by sampleId regex and pairs by subjectId — no metadata sheet."""
+    from unittest.mock import MagicMock
+
+    mock_omics = MagicMock()
+
+    mock_omics.get_paginator.return_value.paginate.return_value = [
+        {
+            "readSets": [
+                {"id": "rs-001"},  # tumor, subjectId=406
+                {"id": "rs-002"},  # normal (BLD), subjectId=406
+                {"id": "rs-003"},  # tumor, subjectId=407 — no paired normal
+            ]
+        }
+    ]
+
+    def _metadata(id, sequenceStoreId):
+        data = {
+            "rs-001": {
+                "sampleId":  "GBX1406",
+                "subjectId": "406",
+                "files": {
+                    "source1": {"s3Access": {"s3Uri": "s3://omics/store/rs-001/source1.bam"}},
+                    "index":   {"s3Access": {"s3Uri": "s3://omics/store/rs-001/source1.bam.bai"}},
+                },
+            },
+            "rs-002": {
+                "sampleId":  "PT406.BLD",
+                "subjectId": "406",
+                "files": {
+                    "source1": {"s3Access": {"s3Uri": "s3://omics/store/rs-002/source1.bam"}},
+                    "index":   {"s3Access": {"s3Uri": "s3://omics/store/rs-002/source1.bam.bai"}},
+                },
+            },
+            "rs-003": {
+                "sampleId":  "GBX1407",
+                "subjectId": "407",
+                "files": {
+                    "source1": {"s3Access": {"s3Uri": "s3://omics/store/rs-003/source1.bam"}},
+                },
+            },
+        }
+        return data[id]
+
+    mock_omics.get_read_set_metadata.side_effect = _metadata
+
+    # boto3 is not installed in the local test image — inject a stub so the lazy
+    # `import boto3` inside build_manifest_omics resolves to our mock.
+    stub_boto3 = MagicMock()
+    stub_boto3.client.return_value = mock_omics
+
+    with patch.dict("sys.modules", {"boto3": stub_boto3}):
+        result = build_manifest_omics("store-001", "us-west-2")
+
+    assert isinstance(result, list)
+    assert len(result) == 2
+
+    # Paired sample — sample_id and tumor_id are both the sampleId from HealthOmics
+    s1 = next(s for s in result if s["tumor_id"] == "GBX1406")
+    assert s1["sample_id"] == "GBX1406"
+    assert s1["tumor_bam"] == "s3://omics/store/rs-001/source1.bam"
+    assert s1["tumor_bai"] == "s3://omics/store/rs-001/source1.bam.bai"
+    assert s1["tumor_sbi"] is None
+    assert s1["normal_id"]  == "PT406.BLD"
+    assert s1["normal_bam"] == "s3://omics/store/rs-002/source1.bam"
+    assert s1["normal_bai"] == "s3://omics/store/rs-002/source1.bam.bai"
+
+    # Tumor-only
+    s2 = next(s for s in result if s["tumor_id"] == "GBX1407")
+    assert s2["sample_id"]  == "GBX1407"
+    assert s2["normal_id"]  is None
+    assert s2["normal_bam"] is None
+    assert s2["normal_bai"] is None
 
 
 def test_main(sample_metadata):

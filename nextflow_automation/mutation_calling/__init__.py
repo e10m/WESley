@@ -1,1 +1,1 @@
-from .make_mc_manifest import find_normal_info, lookup_shortid, build_manifest_local, main
+from .make_mc_manifest import find_normal_info, lookup_shortid, build_manifest_local, build_manifest_omics, main
