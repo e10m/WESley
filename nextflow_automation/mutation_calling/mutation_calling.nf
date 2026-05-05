@@ -116,16 +116,18 @@ workflow {
     contamination_vcf   = file(params.contamination_vcf)
     contamination_vcf_index = file(params.contamination_vcf_index)
     muse_dbsnp          = file(params.muse_dbsnp)
+    muse_dbsnp_index    = file(params.muse_dbsnp_index)
     interval_list       = file(params.interval_list)
     nonsynonymous_list  = file(params.nonsynonymous_list)
     vep_cache           = file(params.vep_cache)
+    sample_list         = file(params.samples)
 
     // logging workflow details
     log_workflow()
     
     // channel in samples from manifest JSON file
-    Channel.fromPath(params.samples)
-        .splitJson()
+    Channel.fromPath(sample_list)
+        .splitJson(path: 'samples')
         .map { s ->
             tuple(
                 s.sample_id,
@@ -165,7 +167,7 @@ workflow {
     mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index, ref_dict)
 
     // run MuSE variant caller
-    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, ref_dict, muse_dbsnp)
+    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, ref_dict, muse_dbsnp, muse_dbsnp_index)
 
     // run VarScan2 variant caller
     pileups = PILEUP(samples.paired, ref_fasta, ref_fasta_index, ref_dict)

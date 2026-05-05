@@ -19,6 +19,7 @@ process MUSE {
     path ref_fasta_index
     path ref_dict
     path muse_dbsnp
+    path muse_dbsnp_index
 
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.MuSE.sump.vcf")
