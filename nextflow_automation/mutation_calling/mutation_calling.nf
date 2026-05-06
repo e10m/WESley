@@ -119,7 +119,6 @@ workflow {
     muse_dbsnp_index    = file(params.muse_dbsnp_index)
     interval_list       = file(params.interval_list)
     nonsynonymous_list  = file(params.nonsynonymous_list)
-    vep_cache           = file(params.vep_cache)
     sample_list         = file(params.samples)
 
     // logging workflow details
@@ -186,7 +185,7 @@ workflow {
     selected_vcfs = SELECT_VARIANTS(compressed_vcfs)
 
     // annotate for biological effects via VEP
-    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
+    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict)
 
     // change the column names in the vcf for standardization
     reheadered_vcfs = REHEADER(vep_annotated_vcfs)
