@@ -21,6 +21,7 @@ process VEP {
     path ref_fasta
     path ref_fasta_index
     path ref_dict
+    path vep_cache
 
     output:
     tuple val(sample_id), path("*vep.vcf")
@@ -45,7 +46,7 @@ process VEP {
     --cache \
     --offline \
     --fasta ${ref_fasta} \
-    --dir_cache /opt/vep/.vep \
+    --dir_cache ${vep_cache} \
     --cache_version 115
     """
 }
