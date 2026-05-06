@@ -34,6 +34,9 @@ process MUSE {
     $tumor_bam \
     $normal_bam
 
+    # refresh dbSNP index date of creation for HealthOmics MuSE bug
+    touch ${muse_dbsnp_index}
+
     # Step 2: MuSE sump - processes / filters variants
     MuSE sump -D ${muse_dbsnp} \
     -E \
