@@ -107,18 +107,18 @@ workflow {
         exit 1
     }
 
-    // stage reference files from params
-    ref_fasta           = file(params.ref_fasta)
-    ref_fasta_index     = file(params.ref_fasta_index)
-    ref_dict            = file(params.ref_dict)
-    gnomad_vcf          = file(params.gnomad_vcf)
-    gnomad_vcf_index    = file(params.gnomad_vcf_index)
-    contamination_vcf   = file(params.contamination_vcf)
-    contamination_vcf_index = file(params.contamination_vcf_index)
-    muse_dbsnp          = file(params.muse_dbsnp)
-    muse_dbsnp_index    = file(params.muse_dbsnp_index)
+    // stage reference files from params (derive from ref_dir when not set explicitly)
+    ref_fasta           = file(params.ref_fasta             ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta")
+    ref_fasta_index     = file(params.ref_fasta_index       ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta.fai")
+    ref_dict            = file(params.ref_dict              ?: "${params.ref_dir}/Homo_sapiens_assembly38.dict")
+    gnomad_vcf          = file(params.gnomad_vcf            ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz")
+    gnomad_vcf_index    = file(params.gnomad_vcf_index      ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi")
+    contamination_vcf   = file(params.contamination_vcf     ?: "${params.ref_dir}/small_exac_common_3.hg38.vcf.gz")
+    contamination_vcf_index = file(params.contamination_vcf_index ?: "${params.ref_dir}/small_exac_common_3.hg38.vcf.gz.tbi")
+    muse_dbsnp          = file(params.muse_dbsnp            ?: "${params.ref_dir}/common_all_20180418.vcf.gz")
+    muse_dbsnp_index    = file(params.muse_dbsnp_index      ?: "${params.ref_dir}/common_all_20180418.vcf.gz.tbi")
     interval_list       = file(params.interval_list)
-    nonsynonymous_list  = file(params.nonsynonymous_list)
+    nonsynonymous_list  = file(params.nonsynonymous_list    ?: "${params.ref_dir}/nonsynonymous.txt")
     vep_cache           = file(params.vep_cache)
     sample_list         = file(params.samples)
 
@@ -220,11 +220,11 @@ workflow CREATE_M2_PON {
         exit 1
     }
 
-    // stage reference files from params
-    ref_fasta           = file(params.ref_fasta)
-    ref_fasta_index     = file(params.ref_fasta_index)
-    gnomad_vcf          = file(params.gnomad_vcf)
-    gnomad_vcf_index    = file(params.gnomad_vcf_index)
+    // stage reference files from params (derive from ref_dir when not set explicitly)
+    ref_fasta           = file(params.ref_fasta         ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta")
+    ref_fasta_index     = file(params.ref_fasta_index   ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta.fai")
+    gnomad_vcf          = file(params.gnomad_vcf        ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz")
+    gnomad_vcf_index    = file(params.gnomad_vcf_index  ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi")
     interval_list       = file(params.interval_list)
 
     // logging workflow details
