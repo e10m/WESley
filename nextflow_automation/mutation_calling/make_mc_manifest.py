@@ -95,7 +95,7 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
         normal_id = None
         normal_seq_id = None
         for row in matching_normals.iter_rows(named=True):
-            matches = (glob.glob(f"{bam_dir}/normals/{row['Line']}*.bam"))
+            matches = (glob.glob(f"{bam_dir}/normals/*{row['Line']}*.bam"))
             if matches:
                 normal_bam = matches[0]
                 normal_id = row["Short ID"]
@@ -161,18 +161,10 @@ def build_manifest_local(bam_dir: str, metadata_sheet: str) -> list[dict]:
             "tumor_bam": f"{path}/{bam_file}",
             "tumor_bai": bai_file,
             "tumor_sbi": sbi_file,
-            # Convert 'NO_FILE' sentinel to None for JSON schema
             "normal_id":  None if normal_info["Normal_ID"]  == "NO_FILE" else normal_info["Normal_ID"],
             "normal_bam": None if normal_info["Normal_BAM"] == "NO_FILE" else normal_info["Normal_BAM"],
             "normal_bai": None if normal_info["Normal_BAI"] == "NO_FILE" else normal_info["Normal_BAI"],
         })
-
-    # Remove rows where the tumor is incorrectly marked as its own normal
-    samples = [
-        s for s in samples
-        if not (s["normal_bam"] and s["tumor_id"] in s["normal_bam"])
-        and s["tumor_id"] != s["normal_id"]
-    ]
 
     return samples
 
@@ -279,3 +271,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+3
