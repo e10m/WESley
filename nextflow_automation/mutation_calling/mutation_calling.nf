@@ -12,7 +12,7 @@ include { FILTER_MUTECT_CALLS } from './modules/mutect2/filter_mutect_calls.nf'
 include { INDEX } from './modules/shared/index.nf'
 include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
 include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
-include { VEP } from './modules/shared/vep.nf'
+include { VEP; VEP_OMICS } from './modules/shared/vep.nf'
 include { REHEADER } from './modules/shared/reheader.nf'
 include { CREATE_MAF } from './modules/shared/create_maf.nf'
 include { KEEP_NONSYNONYMOUS } from './modules/shared/keep_nonsynonymous.nf'
@@ -119,7 +119,11 @@ workflow {
     muse_dbsnp_index    = file(params.muse_dbsnp_index      ?: "${params.ref_dir}/common_all_20180418.vcf.gz.tbi")
     interval_list       = file(params.interval_list)
     nonsynonymous_list  = file(params.nonsynonymous_list    ?: "${params.ref_dir}/nonsynonymous.txt")
-    vep_cache           = file(params.vep_cache)
+    // vep_cache: on HealthOmics it's an S3 URI to be staged (path); locally
+    // it's an in-container path string (val) so Nextflow doesn't bind-mount
+    // /opt/vep over the container's VEP install. See VEP / VEP_OMICS in vep.nf.
+    is_omics            = System.getenv('AWS_WORKFLOW_RUN') as Boolean
+    vep_cache           = is_omics ? file(params.vep_cache) : params.vep_cache
     sample_list         = file(params.samples)
 
     // logging workflow details
@@ -185,8 +189,12 @@ workflow {
     // select for passing variants via gatk SelectVariants
     selected_vcfs = SELECT_VARIANTS(compressed_vcfs)
 
-    // annotate for biological effects via VEP
-    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
+    // annotate for biological effects via VEP — dispatch to the path-input
+    // variant on HealthOmics (S3 staging) or the val-input variant locally
+    // (uses cache baked into e10m/vep:115 at /opt/vep/.vep)
+    vep_annotated_vcfs = is_omics
+        ? VEP_OMICS(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
+        : VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
 
     // change the column names in the vcf for standardization
     reheadered_vcfs = REHEADER(vep_annotated_vcfs)
