@@ -1,13 +1,65 @@
 /*
 oncokb.nf
 
-This module provides clinically relevant annotations to the variant calling MAF files
-using Oncokb.
+This module provides clinically relevant annotations to the variant calling MAF
+files using OncoKB.
 
-Oncokb Version: 3.0.0.
+OncoKB Version: 3.0.0.
+
+Two process variants share an identical script body apart from how they obtain
+the OncoKB API key:
+  - ONCOKB (local): pulls the key from a Nextflow secret (`secret 'ONCOKB_API_KEY'`).
+                    Set it once with `nextflow secrets set ONCOKB_API_KEY ...`.
+  - ONCOKB_OMICS:   pulls the key from AWS Secrets Manager at runtime via the
+                    AWS CLI. The HealthOmics task role must allow
+                    `secretsmanager:GetSecretValue` on `${params.oncokb_secret_name}`.
+The workflow caller dispatches to one or the other based on
+System.getenv('AWS_WORKFLOW_RUN').
 */
 
 process ONCOKB {
+    tag "${sample_id}"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*vep.nonsynonymous*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*vep.nonsynonymous*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/oncokb_annotation", mode: 'copy', pattern: "*varscan2*vep.nonsynonymous*"
+    label 'lowCpu'
+    label 'lowMem'
+    label 'medTime'
+    secret 'ONCOKB_API_KEY'
+
+    input:
+    tuple val(sample_id), path(nonsyno_maf)
+
+    output:
+    tuple val(sample_id), path("*vep.nonsynonymous.oncokb.maf")
+
+    script:
+    """
+    # save the base name to change parameters based on variant caller
+    BASE_NAME=\$(basename "${nonsyno_maf}")
+
+    if [[ "\$BASE_NAME" == *"mutect2.tumorOnly"* ]]; then
+        OUTPUT_NAME="${sample_id}.mutect2.tumorOnly.vep.nonsynonymous.oncokb.maf"
+    elif [[ "\$BASE_NAME" == *"mutect2.paired"* ]]; then
+        OUTPUT_NAME="${sample_id}.mutect2.paired.vep.nonsynonymous.oncokb.maf"
+    elif [[ "\$BASE_NAME" == *"MuSE"* ]]; then
+        OUTPUT_NAME="${sample_id}.MuSE.vep.nonsynonymous.oncokb.maf"
+    elif [[ "\$BASE_NAME" == *"varscan2"* ]]; then
+        OUTPUT_NAME="${sample_id}.varscan2.vep.nonsynonymous.oncokb.maf"
+    fi
+
+    # annotate via oncokb
+    python /app/MafAnnotator.py \
+    -i $nonsyno_maf \
+    -o \$OUTPUT_NAME \
+    -r GRCh38 \
+    -b "\$ONCOKB_API_KEY" \
+    -t BRAIN
+    """
+}
+
+
+process ONCOKB_OMICS {
     tag "${sample_id}"
     publishDir "${params.output_dir}/mutation_calls/mutect2/oncokb_annotation", mode: 'copy', pattern: "*mutect2*vep.nonsynonymous*"
     publishDir "${params.output_dir}/mutation_calls/MuSE/oncokb_annotation", mode: 'copy', pattern: "*MuSE*vep.nonsynonymous*"
@@ -23,13 +75,13 @@ process ONCOKB {
     tuple val(sample_id), path("*vep.nonsynonymous.oncokb.maf")
 
     script:
-    def get_key = params.use_secrets_manager
-        ? "ONCOKB_API_KEY=\$(aws secretsmanager get-secret-value --secret-id ${params.oncokb_secret_name} --query SecretString --output text)"
-        : "ONCOKB_API_KEY=${params.oncokb_api_key}"
-
     """
-    # retrieve OncoKB API key
-    ${get_key}
+    # retrieve OncoKB API key from AWS Secrets Manager
+    ONCOKB_API_KEY=\$(aws secretsmanager get-secret-value \
+        --secret-id ${params.oncokb_secret_name} \
+        --region us-west-2 \
+        --query SecretString \
+        --output text)
 
     # save the base name to change parameters based on variant caller
     BASE_NAME=\$(basename "${nonsyno_maf}")

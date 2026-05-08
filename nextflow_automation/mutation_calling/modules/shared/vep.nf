@@ -5,9 +5,63 @@ This module inputs the selected variant vcf files and annotates them for biologi
 effects, phenotype association, allele frequency reporting, and deleteriousness predictions using VEP.
 
 Ensembl VEP Version: 115.
+
+Two process variants share an identical script body:
+  - VEP (local):  vep_cache passed as `val`. Avoids Nextflow auto-mounting
+                  /opt/vep from the host, which would shadow the in-container
+                  /opt/vep/src/ensembl-vep/vep binary. The e10m/vep:115 image
+                  has the cache baked in at /opt/vep/.vep.
+  - VEP_OMICS:    vep_cache passed as `path` so AWS HealthOmics stages it
+                  from S3 into the run's working storage.
+The workflow caller dispatches to one or the other based on
+System.getenv('AWS_WORKFLOW_RUN').
 */
 
 process VEP {
+    tag "${sample_id}"
+    publishDir "${params.output_dir}/mutation_calls/mutect2/vep_annotated_vcfs", mode: 'copy', pattern: "*mutect2*vep.vcf*"
+    publishDir "${params.output_dir}/mutation_calls/MuSE/vep_annotated_vcfs", mode: 'copy', pattern: "*MuSE*vep.vcf*"
+    publishDir "${params.output_dir}/mutation_calls/varscan2/vep_annotated_vcfs", mode: 'copy', pattern: "*varscan2*vep.vcf*"
+    label 'medCpu'
+    label 'medMem'
+    label 'medTime'
+
+    input:
+    tuple val(sample_id), val(tumor_id), val(normal_id), path(selected_vcf), path(index_file)
+    path ref_fasta
+    path ref_fasta_index
+    path ref_dict
+    val vep_cache
+
+    output:
+    tuple val(sample_id), path("*vep.vcf")
+
+    script:
+    """
+    # save base name (no file paths) for file name manipulation based on variant caller
+    BASE_NAME=\$(basename "${selected_vcf}")
+
+    # replace file name parts based on variant caller
+    OUTPUT_NAME=\${BASE_NAME/pass/vep}
+
+    # annotate via VEP
+    /opt/vep/src/ensembl-vep/vep \
+    --vcf \
+    --input_file $selected_vcf \
+    --output_file "\${OUTPUT_NAME%.gz}" \
+    --everything \
+    --species homo_sapiens \
+    --no_stats \
+    --fork ${task.cpus} \
+    --cache \
+    --offline \
+    --fasta ${ref_fasta} \
+    --dir_cache ${vep_cache} \
+    --cache_version 115
+    """
+}
+
+process VEP_OMICS {
     tag "${sample_id}"
     publishDir "${params.output_dir}/mutation_calls/mutect2/vep_annotated_vcfs", mode: 'copy', pattern: "*mutect2*vep.vcf*"
     publishDir "${params.output_dir}/mutation_calls/MuSE/vep_annotated_vcfs", mode: 'copy', pattern: "*MuSE*vep.vcf*"
@@ -28,14 +82,10 @@ process VEP {
 
     script:
     """
-    # save base name (no file paths) for file name manipulation based on variant caller
     BASE_NAME=\$(basename "${selected_vcf}")
-
-    # replace file name parts based on variant caller
     OUTPUT_NAME=\${BASE_NAME/pass/vep}
 
-    # annotate via VEP
-    vep \
+    /opt/vep/src/ensembl-vep/vep \
     --vcf \
     --input_file $selected_vcf \
     --output_file "\${OUTPUT_NAME%.gz}" \

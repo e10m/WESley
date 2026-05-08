@@ -73,24 +73,45 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
             "Normal_BAM": "NO_FILE",
             "Normal_BAI": "NO_FILE"
         }
+    elif matching_normals.height == 1:
+        # Get normal IDs
+        normal_id = matching_normals.get_column("Short ID").item()
+        normal_seq_id = matching_normals.get_column("WES ID").item()
 
-    # Get normal IDs
-    normal_id = matching_normals.get_column("Short ID").item()
-    normal_seq_id = matching_normals.get_column("WES ID").item()
+        # Find BAM and BAI files
+        bam_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bam") or
+                    glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bam"))
+        bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
+                    glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai"))
 
-    # Find BAM and BAI files
-    bam_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bam") or
-                 glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bam"))
-    bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
-                 glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai"))
+        return {
+            "Tumor_ID": tumor_id,
+            "Normal_ID": normal_id,
+            "Normal_BAM": bam_files[0] if bam_files else "NO_FILE",
+            "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
+        }
+    else:
+        normal_bam = None
+        normal_id = None
+        normal_seq_id = None
+        for row in matching_normals.iter_rows(named=True):
+            matches = (glob.glob(f"{bam_dir}/normals/*{row['Line']}*.bam"))
+            if matches:
+                normal_bam = matches[0]
+                normal_id = row["Short ID"]
+                normal_seq_id = row["WES ID"]
+                break
 
-    return {
-        "Tumor_ID": tumor_id,
-        "Normal_ID": normal_id,
-        "Normal_BAM": bam_files[0] if bam_files else "NO_FILE",
-        "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
-    }
+        bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
+                     glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai")) if normal_id else []
 
+        return {
+            "Tumor_ID": tumor_id,
+            "Normal_ID": normal_id if normal_id else "NO_FILE",
+            "Normal_BAM": normal_bam if normal_bam else "NO_FILE",
+            "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
+        }
+    
 def lookup_shortid(tcgb_id: str, metadata_subset: pl.DataFrame) -> str:
     """Look up short ID given the TCGB ID for a given sample."""
     metadata_row = metadata_subset.filter(pl.col("WES ID") == tcgb_id)
@@ -140,18 +161,10 @@ def build_manifest_local(bam_dir: str, metadata_sheet: str) -> list[dict]:
             "tumor_bam": f"{path}/{bam_file}",
             "tumor_bai": bai_file,
             "tumor_sbi": sbi_file,
-            # Convert 'NO_FILE' sentinel to None for JSON schema
             "normal_id":  None if normal_info["Normal_ID"]  == "NO_FILE" else normal_info["Normal_ID"],
             "normal_bam": None if normal_info["Normal_BAM"] == "NO_FILE" else normal_info["Normal_BAM"],
             "normal_bai": None if normal_info["Normal_BAI"] == "NO_FILE" else normal_info["Normal_BAI"],
         })
-
-    # Remove rows where the tumor is incorrectly marked as its own normal
-    samples = [
-        s for s in samples
-        if not (s["normal_bam"] and s["tumor_id"] in s["normal_bam"])
-        and s["tumor_id"] != s["normal_id"]
-    ]
 
     return samples
 

@@ -19,6 +19,7 @@ process MUSE {
     path ref_fasta_index
     path ref_dict
     path muse_dbsnp
+    path muse_dbsnp_index
 
     output:
     tuple val(sample_id), val(tumor_id), val(normal_id), path("${sample_id}.MuSE.sump.vcf")
@@ -32,6 +33,9 @@ process MUSE {
     -O "${sample_id}" \
     $tumor_bam \
     $normal_bam
+
+    # refresh dbSNP index date of creation for HealthOmics MuSE bug
+    touch ${muse_dbsnp_index}
 
     # Step 2: MuSE sump - processes / filters variants
     MuSE sump -D ${muse_dbsnp} \

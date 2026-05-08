@@ -12,12 +12,12 @@ include { FILTER_MUTECT_CALLS } from './modules/mutect2/filter_mutect_calls.nf'
 include { INDEX } from './modules/shared/index.nf'
 include { MERGE_VCFS } from './modules/varscan2/merge_vcf.nf'
 include { SELECT_VARIANTS } from './modules/shared/select_variants.nf'
-include { VEP } from './modules/shared/vep.nf'
+include { VEP; VEP_OMICS } from './modules/shared/vep.nf'
 include { REHEADER } from './modules/shared/reheader.nf'
 include { CREATE_MAF } from './modules/shared/create_maf.nf'
 include { KEEP_NONSYNONYMOUS } from './modules/shared/keep_nonsynonymous.nf'
 include { RENAME_HG38 } from './modules/shared/rename_hg38.nf'
-include { ONCOKB } from './modules/shared/oncokb.nf'
+include { ONCOKB; ONCOKB_OMICS } from './modules/shared/oncokb.nf'
 include { MUTECT2_PON } from './modules/mutect2_pon/mutect2_pon.nf'
 include { GENOMICS_DB_IMPORT } from './modules/mutect2_pon/genomics_db_import.nf'
 include { CREATE_PON } from './modules/mutect2_pon/create_pon.nf'
@@ -35,7 +35,7 @@ def help_message() {
     Required arguments:
     --output_dir                  Path to the output directory for results
     --ref_dir                     Path to the reference directory
-    -params-file                  Path to manifest JSON file produced by make_mc_manifest.py
+    --samples                     Path to manifest JSON file produced by make_mc_manifest.py
     --interval_list               Path to interval list file for targeted analysis
 
     Optional arguments:
@@ -56,7 +56,7 @@ def help_message() {
         -entry <WORKFLOW_NAME> \\
         --output_dir /path/to/data \\
         --ref_dir /path/to/reference \\
-        -params-file manifest.json \\
+        --samples manifest.json \\
         --interval_list /path/to/interval_list
     """.stripIndent()
 }
@@ -103,29 +103,35 @@ workflow {
     // validate parameters
     parameter_validation()
     if (!params.samples) {
-        error "ERROR: samples list is empty. Generate a manifest with make_mc_manifest.py and pass it via -params-file manifest.json"
+        error "ERROR: --samples is required. Generate a manifest with make_mc_manifest.py and pass it via --samples manifest.json"
         exit 1
     }
 
-    // stage reference files from params
-    ref_fasta           = file(params.ref_fasta)
-    ref_fasta_index     = file(params.ref_fasta_index)
-    ref_dict            = file(params.ref_dict)
-    gnomad_vcf          = file(params.gnomad_vcf)
-    gnomad_vcf_index    = file(params.gnomad_vcf_index)
-    contamination_vcf   = file(params.contamination_vcf)
-    contamination_vcf_index = file(params.contamination_vcf_index)
-    muse_dbsnp          = file(params.muse_dbsnp)
+    // stage reference files from params (derive from ref_dir when not set explicitly)
+    ref_fasta           = file(params.ref_fasta             ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta")
+    ref_fasta_index     = file(params.ref_fasta_index       ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta.fai")
+    ref_dict            = file(params.ref_dict              ?: "${params.ref_dir}/Homo_sapiens_assembly38.dict")
+    gnomad_vcf          = file(params.gnomad_vcf            ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz")
+    gnomad_vcf_index    = file(params.gnomad_vcf_index      ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi")
+    contamination_vcf   = file(params.contamination_vcf     ?: "${params.ref_dir}/small_exac_common_3.hg38.vcf.gz")
+    contamination_vcf_index = file(params.contamination_vcf_index ?: "${params.ref_dir}/small_exac_common_3.hg38.vcf.gz.tbi")
+    muse_dbsnp          = file(params.muse_dbsnp            ?: "${params.ref_dir}/common_all_20180418.vcf.gz")
+    muse_dbsnp_index    = file(params.muse_dbsnp_index      ?: "${params.ref_dir}/common_all_20180418.vcf.gz.tbi")
     interval_list       = file(params.interval_list)
-    nonsynonymous_list  = file(params.nonsynonymous_list)
-    vep_cache           = file(params.vep_cache)
+    nonsynonymous_list  = file(params.nonsynonymous_list    ?: "${params.ref_dir}/nonsynonymous.txt")
+    // vep_cache: on HealthOmics it's an S3 URI to be staged (path); locally
+    // it's an in-container path string (val) so Nextflow doesn't bind-mount
+    // /opt/vep over the container's VEP install. See VEP / VEP_OMICS in vep.nf.
+    is_omics            = System.getenv('AWS_WORKFLOW_RUN') as Boolean
+    vep_cache           = is_omics ? file(params.vep_cache) : params.vep_cache
+    sample_list         = file(params.samples)
 
     // logging workflow details
     log_workflow()
     
-    // channel in samples from params.samples JSON array
-    channel
-        .fromList(params.samples)
+    // channel in samples from manifest JSON file
+    Channel.fromPath(sample_list)
+        .splitJson(path: 'samples')
         .map { s ->
             tuple(
                 s.sample_id,
@@ -165,7 +171,7 @@ workflow {
     mutect2_vcfs = FILTER_MUTECT_CALLS(filter_input, ref_fasta, ref_fasta_index, ref_dict)
 
     // run MuSE variant caller
-    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, ref_dict, muse_dbsnp)
+    muse_vcfs = MUSE(samples.paired, ref_fasta, ref_fasta_index, ref_dict, muse_dbsnp, muse_dbsnp_index)
 
     // run VarScan2 variant caller
     pileups = PILEUP(samples.paired, ref_fasta, ref_fasta_index, ref_dict)
@@ -183,8 +189,12 @@ workflow {
     // select for passing variants via gatk SelectVariants
     selected_vcfs = SELECT_VARIANTS(compressed_vcfs)
 
-    // annotate for biological effects via VEP
-    vep_annotated_vcfs = VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
+    // annotate for biological effects via VEP — dispatch to the path-input
+    // variant on HealthOmics (S3 staging) or the val-input variant locally
+    // (uses cache baked into e10m/vep:115 at /opt/vep/.vep)
+    vep_annotated_vcfs = is_omics
+        ? VEP_OMICS(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
+        : VEP(selected_vcfs, ref_fasta, ref_fasta_index, ref_dict, vep_cache)
 
     // change the column names in the vcf for standardization
     reheadered_vcfs = REHEADER(vep_annotated_vcfs)
@@ -201,8 +211,11 @@ workflow {
     // rename and reformat the files
     renamed_files = RENAME_HG38(nonsynonymous_mutations)
 
-    // oncokb annotation for clinical relevance
-    ONCOKB(renamed_files)
+    // oncokb annotation for clinical relevance — dispatch to the AWS Secrets
+    // Manager variant on HealthOmics, otherwise use the Nextflow secret variant
+    is_omics
+        ? ONCOKB_OMICS(renamed_files)
+        : ONCOKB(renamed_files)
 }
 
 workflow CREATE_M2_PON {
@@ -218,11 +231,11 @@ workflow CREATE_M2_PON {
         exit 1
     }
 
-    // stage reference files from params
-    ref_fasta           = file(params.ref_fasta)
-    ref_fasta_index     = file(params.ref_fasta_index)
-    gnomad_vcf          = file(params.gnomad_vcf)
-    gnomad_vcf_index    = file(params.gnomad_vcf_index)
+    // stage reference files from params (derive from ref_dir when not set explicitly)
+    ref_fasta           = file(params.ref_fasta         ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta")
+    ref_fasta_index     = file(params.ref_fasta_index   ?: "${params.ref_dir}/Homo_sapiens_assembly38.fasta.fai")
+    gnomad_vcf          = file(params.gnomad_vcf        ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz")
+    gnomad_vcf_index    = file(params.gnomad_vcf_index  ?: "${params.ref_dir}/af-only-gnomad.hg38.vcf.gz.tbi")
     interval_list       = file(params.interval_list)
 
     // logging workflow details

@@ -5,8 +5,7 @@
 
 ---
 
-<details>
-<summary><strong>Table of Contents</strong></summary>
+## Table of Contents
 
 - [Workflow Diagrams](#workflow-diagrams)
 - [How To Run](#how-to-run-data-processing)
@@ -16,6 +15,7 @@
   - [CNV Calling](#how-to-run-cnvkitnfcnv_calling)
   - [Create CNVKit Normal](#how-to-run-cnvkitnfcreate_norm)
   - [Consensus Calling](#how-to-run-consensus-calling)
+- [AWS HealthOmics](#aws-healthomics)
 - [Docker & Containerization](#docker--containerization)
 - [Requirements](#requirements)
 - [Testing & CI/CD](#testing--cicd)
@@ -23,9 +23,8 @@
 - [Troubleshooting](#troubleshooting)
 - [Contributors](#contributors)
 
-</details>
-
 ---
+
 ## Workflow Diagrams
 ### Data Processing
 ![Data Processing](./diagrams/data-processing.png)
@@ -47,7 +46,7 @@ nextflow run data_processing.nf -with-docker -with-trace \
 --fastq_dir /path/to/batch-18/raw_fastqs \
 --output_dir /path/to/batch-18/results \
 --ref_dir /references \
---metadata /path/to/batch-18/metadata/batch18_metadata_sheet.tsv \
+--metadata /path/to/batch-18/metadata/seq_metadata_sheet.csv \
 --seq_center "TCGB" \
 --platform "Illumina_NovaSeqX"
 ```
@@ -61,47 +60,66 @@ nextflow run data_processing.nf -with-docker -with-trace \
 | `--fastq_dir`   | Directory containing raw FASTQ files |
 | `--output_dir`  | Directory for pipeline outputs |
 | `--ref_dir`     | Directory containing reference genomes and annotation databases |
-| `--metadata`    | TSV mapping WES IDs (TCGB format) to Short IDs (e.g., `batch18_metadata_sheet.tsv`) |
+| `--metadata`    | Sequencing Metadata in CSV Format |
 | `--seq_center`  | Sequencing center name (e.g., `TCGB`) |
 | `--platform`    | Sequencing platform (e.g., `Illumina_NovaSeqX`) |
 | `--cpus`        | Number of CPUs to allocate for each process (default: 30) |
 
 ## How To Run (Mutation Calling)
 
-### 1. Generate the Metadata Sheet
+### 1. Generate the Manifest
 
-Use the `make_mc_manifest.py` script to generate a `.tsv` metadata file required for downstream Nextflow processes.
-* NOTE: Ensure normal BAMs are stored in the `normals/` subdirectory under `--bam_dir`
+Use `make_mc_manifest.py` to generate the JSON manifest required by the mutation calling workflow. Two platforms are supported:
+
+#### Local (filesystem)
+* NOTE: Normal BAMs must be stored in the `normals/` subdirectory under `--bam_dir`
 
 ```bash
-python make_mc_manifest.py \
--d /path/to/batch-18/bams \
--b "wes-18" \
--o /path/to/batch-18/metadata \
--m /path/to/sequencing-metadata.xlsx
+python make_mc_manifest.py --platform local \
+  -d /path/to/batch-18/bams \
+  -m /path/to/sequencing-metadata.xlsx \
+  -o manifest.json
 ```
 
-**Script Parameters:**
-| Flag      | Description |
-|-----------|-------------|
-| -d, --bam_dir | Directory containing the BAM files (e.g., `/path/to/batch-18/bams`) |
-| -b, --batch_name | Batch name for naming the output TSV file |
-| -o, --output_dir | Output directory for the generated TSV metadata file |
-| -m, --metadata | Path to sequencing metadata sheet (Excel .xlsx) |
+| Flag | Description |
+|------|-------------|
+| `--platform local` | Scan a local BAM directory |
+| `-d, --bam_dir` | Directory containing tumor BAM files |
+| `-m, --metadata` | Path to sequencing metadata sheet (Excel .xlsx) |
+| `-o, --output` | Output path for the manifest JSON |
 
-### 2. Run Mutation Calling (mutation_calling.nf:mutation_calling):
+#### AWS HealthOmics Sequence Store
+No metadata sheet required — tumor/normal classification and pairing are derived entirely from ReadSet metadata (`sampleId`, `subjectId`). Samples whose `sampleId` matches `BLD`, `NRM`, `CD45`, or `PBMC` are classified as normals; tumors and normals sharing the same `subjectId` are paired.
 
 ```bash
-# Set OncoKB API token via Nextflow secrets (only needs to be used once)
+python make_mc_manifest.py --platform omics \
+  --store_id <SEQUENCE_STORE_ID> \
+  --region us-west-2 \
+  -o manifest.json
+```
+
+| Flag | Description |
+|------|-------------|
+| `--platform omics` | Query a HealthOmics Sequence Store via boto3 |
+| `--store_id` | HealthOmics Sequence Store ID |
+| `--region` | AWS region of the Sequence Store |
+| `-o, --output` | Output path for the manifest JSON |
+
+### 2. Run Mutation Calling:
+
+### On Local Workstations
+```bash
+# Set OncoKB API token via Nextflow secrets (only needs to be done once)
 nextflow secrets set ONCOKB_API_KEY "your_actual_API_token"
 
 # Run the pipeline
-nextflow run mutation_calling.nf --with-docker -with-trace \
--entry "MUTATION_CALLING" \
+nextflow -C "/path/to/config" \
+run mutation_calling.nf \
+-with-docker -with-trace \
 --output_dir "/path/to/batch-18/results" \
 --ref_dir "/path/to/references" \
---metadata "/path/to/batch-18/metadata/batch18_mc_manifest.tsv" \
---interval_list "/path/to/references/seqcap_hg38_capture_targets.interval_list" \
+--samples manifest.json \
+--interval_list "/path/to/references/KAPA_bait.interval_list" \
 --cpus 30
 ```
 
@@ -113,11 +131,24 @@ nextflow run mutation_calling.nf --with-docker -with-trace \
 | `-with-trace`    | No       | Generates trace logs for resource usage and execution profiling |
 | `--output_dir`   | Yes      | Output directory for mutation calling results |
 | `--ref_dir`      | Yes      | Directory containing reference genomes and annotation databases |
-| `--metadata`     | Yes      | Path to the TSV manifest generated by `make_mc_manifest.py` |
+| `--samples`      | Yes      | Path to the JSON manifest generated by `make_mc_manifest.py` |
 | `--interval_list`| Yes      | Path to interval list file for targeted sequencing regions |
 | `--cpus`         | No       | Number of CPUs to allocate for each process (default: 30) |
 
-**Note:** The `--bam_dir` parameter is used by `make_mc_manifest.py` for manifest generation only, not by the mutation calling workflow itself. The workflow relies on Docker images with pre-installed tools at `/app`, so no `--app_dir` parameter is needed.
+**Note:** The `--bam_dir` parameter is used by `make_mc_manifest.py` for manifest generation only, not by the mutation calling workflow itself.
+
+### On AWS HealthOmics
+
+See the [AWS HealthOmics](#aws-healthomics) section for full setup instructions (authentication, workflow deployment, sequence store import). Once setup is complete:
+
+```bash
+# 1. Authenticate via okta-aws-cli (see AWS HealthOmics section)
+# 2. Generate manifest from Sequence Store
+python make_mc_manifest.py --platform omics \
+  --store_id <STORE_ID> --region us-west-2 -o manifest.json
+
+# 3. Upload manifest and start run (see AWS HealthOmics section)
+```
 
 ## How To Run (mutation_calling.nf:CREATE_M2_PON)
 
@@ -162,8 +193,7 @@ run "cnvkit.nf" \
 --ref_dir "/path/to/references" \
 --pooled_normal "normal.cnn" \
 --cpus 40 \
---batch_name "wes-10" \
-
+--batch_name "wes-10"
 ```
 
 **Script Parameters:**
@@ -207,8 +237,8 @@ run "cnvkit.nf" \
 
 ## How To Run (Consensus Calling)
 ```bash
-# Set OncoKB API token via Nextflow secrets (only needs to be used once
-# This can be skipped if already done from Mutation Calling workflow)
+# Set OncoKB API token via Nextflow secrets (only needs to be done once;
+# skip if already set from Mutation Calling)
 nextflow secrets set ONCOKB_API_KEY "your_actual_API_token"
 
 # Run the pipeline
@@ -227,6 +257,133 @@ nextflow run consensus_calling.nf --with-docker -with-trace \
 | `--base_dir`     | Base directory for batch data (e.g., `wes-batch-18`) |
 | `--ref_dir`      | Directory containing reference genomes and annotation databases |
 | `--cpus`         | Number of CPUs to allocate for each process |
+
+## AWS HealthOmics
+
+WESley supports running the mutation calling workflow on [AWS HealthOmics](https://aws.amazon.com/omics/). The pipeline auto-detects the HealthOmics environment via the `AWS_WORKFLOW_RUN` environment variable and loads `mutation_calling/conf/omics.config`, which overrides:
+
+> **AWS Console:** https://uclahealth.okta.com/ — Default region: `us-west-2`
+
+### AWS CLI Authentication
+
+HealthOmics requires short-lived credentials via Okta. Run this before any AWS CLI commands — credentials expire each session.
+
+```bash
+# Install okta-aws-cli (one-time)
+brew install okta-aws-cli  # macOS
+
+# Authenticate (prompts for UCLA 2FA/Duo)
+okta-aws-cli --org-domain mylogin.it.uclahealth.org --oidc-client-id <OIDC_CLIENT_ID>
+
+# Export the printed credentials
+export AWS_ACCESS_KEY_ID=***
+export AWS_SECRET_ACCESS_KEY=***
+export AWS_SESSION_TOKEN=***
+```
+
+### Deploying the Workflow (one-time setup)
+
+Only needs to be done once, or when pipeline code changes.
+
+```bash
+# Zip the workflow
+cd nextflow_automation/
+zip -r /tmp/mutation_calling.zip mutation_calling/
+
+# Create the HealthOmics private workflow
+WORKFLOW_ID=$(aws omics create-workflow \
+  --name WESley-mutation-calling \
+  --definition-zip fileb:///tmp/mutation_calling.zip \
+  --engine NEXTFLOW \
+  --query 'id' --output text)
+
+# Verify it's active
+aws omics get-workflow --id $WORKFLOW_ID --query 'status'
+```
+
+Alternatively, create via **AWS Console → HealthOmics → Private Workflows → Create Workflow** (upload the zip, select Nextflow engine).
+
+### Sequence Store Setup
+
+BAMs must be imported into a HealthOmics Sequence Store before running. Create a Sequence Store via the console with an S3 fallback bucket, then import BAMs:
+
+```bash
+# Upload BAMs to S3 first
+aws s3 cp ./bams/ s3://your-bucket/bams/ --recursive --include "*.bam"
+
+# Create an import manifest (indexes are generated automatically — BAMs only)
+cat > import_manifest.json << 'EOF'
+[
+  {
+    "subjectId": "90",
+    "sampleId": "PT090",
+    "sourceFileType": "BAM",
+    "sourceFiles": { "source1": "s3://your-bucket/bams/PT090.BQSR.bam" },
+    "referenceArn": "arn:aws:omics:us-west-2:<ACCOUNT>:referenceStore/<REF_STORE_ID>/reference/<REF_ID>"
+  }
+]
+EOF
+```
+
+Then import via **Console → Sequence Store → Import Read Sets**, selecting `ucla-dgit-omics-service-role` as the service role.
+
+### ECR — Custom Container Images
+
+HealthOmics pulls containers from ECR. To push updated custom images:
+
+```bash
+# Build and push to Docker Hub first
+docker build -t e10m/<image>:<version> -f containerization/dockerfiles/<image>.Dockerfile .
+docker push e10m/<image>:<version>
+
+# Push to ECR (adjust image names in the script)
+bash containerization/scripts/ecr_push.sh
+
+# Grant HealthOmics pull access to the ECR repo
+aws ecr set-repository-policy --repository-name <repo> --region us-west-2 \
+  --policy-text '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"omics.amazonaws.com"},"Action":["ecr:GetDownloadUrlForLayer","ecr:BatchGetImage","ecr:BatchCheckLayerAvailability"]}]}'
+```
+
+- **Reference paths** — switched to S3 (`s3://omics-sequence-971422717605-4-8-2026/references/`)
+- **Container images** — switched to ECR (`971422717605.dkr.ecr.us-west-2.amazonaws.com/...`)
+- **Output directory** — set to `/mnt/workflow/pubdir`
+- **OncoKB secrets** — retrieved automatically from AWS Secrets Manager (`oncokb-api-key`) rather than Nextflow secrets
+
+### OncoKB Token — Local vs HealthOmics
+
+| Mode | How the token is stored | Setup |
+|------|------------------------|-------|
+| Local | Nextflow secrets (`~/.nextflow/secrets/`) | `nextflow secrets set ONCOKB_API_KEY "your_token"` |
+| HealthOmics | AWS Secrets Manager (`oncokb-api-key`) | Create the secret once; retrieved automatically at runtime |
+
+> **Note:** OncoKB API tokens expire every 6 months. A GitHub Actions workflow (`test-api.yml`) checks token validity weekly and fails loudly on expiry.
+
+> **IAM requirement:** The HealthOmics service role must have `secretsmanager:GetSecretValue` permission on the `oncokb-api-key` secret.
+
+### Submitting a Run
+
+```bash
+# 1. Authenticate (credentials expire each session)
+okta-aws-cli --org-domain mylogin.it.uclahealth.org --oidc-client-id <OIDC_CLIENT_ID>
+export AWS_ACCESS_KEY_ID=*** AWS_SECRET_ACCESS_KEY=*** AWS_SESSION_TOKEN=***
+
+# 2. Generate manifest from Sequence Store
+python make_mc_manifest.py --platform omics \
+  --store_id <STORE_ID> --region us-west-2 -o manifest.json
+
+# 3. Upload manifest to S3
+aws s3 cp manifest.json s3://<BUCKET>/manifests/
+
+# 4. Start HealthOmics run (CLI)
+aws omics start-run \
+  --workflow-id <WORKFLOW_ID> \
+  --output-uri s3://<BUCKET>/outputs/ \
+  --role-arn arn:aws:iam::<ACCOUNT>:role/ucla-dgit-omics-service-role \
+  --parameters '{"samples":"s3://.../manifest.json","interval_list":"s3://.../KAPA_bait.interval_list"}' \
+  --region us-west-2
+```
+
+Alternatively, start via **Console → HealthOmics → Runs → Start Run**, selecting the service role and uploading a parameters JSON.
 
 ## Docker & Containerization
 
@@ -280,7 +437,7 @@ containerOptions = "-v ${params.ref_dir}:/references"
 |-----------------|----------|---------|
 | Nextflow        | 25.04.6  | Workflow management |
 | Docker          | 18.09.7  | Containerization |
-| Python          | 3.6.10   | Scripting and automation |
+| Python          | 3.10     | Scripting and automation |
 | R               | 4.3.1    | Statistical analysis |
 | Ubuntu          | 20.04    | Shell & data manipulation |
 
@@ -295,39 +452,40 @@ containerOptions = "-v ${params.ref_dir}:/references"
 | FastQC          | v0.11.9  | Quality control |
 | MultiQC         | v1.30    | Quality control aggregation |
 
-#### Mutation Calling 
+#### Mutation Calling
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
 | GATK / Mutect2  | 4.2.0.0  | Variant calling |
-| Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
+| Ensembl VEP     | 115      | Variant annotation |
 | vcf2maf.pl      | 1.6.19   | VCF to MAF conversion |
 | MuSE            | v1.0rc   | Somatic mutation detection |
-| Openjdk/Java (Mutect2)    | 11.0.1  | Java runtime environment |
-| Openjdk/Java (VarScan2)    | 11.0.27  | Java runtime environment |
-| Cromwell        | 60       | Mutect2.wdl execution |
+| Openjdk/Java    | 11.0.27  | Java runtime environment |
 | OncoKB          | 3.0.0    | Clinical annotation |
 | VarScan         | v2.4.3   | Variant detection |
-| bcftools  | 1.10.2 | BCF file manipulation |
+| bcftools        | 1.10.2   | BCF file manipulation |
 
 #### Copy Number Calling
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
-| CNVKit  | 0.9.10  | Copy Number Calling |
+| CNVKit          | 0.9.10   | Copy Number Calling |
 
 #### Consensus Calling
 | Software        | Version  | Purpose |
 |-----------------|----------|---------|
-| Ensembl VEP     | 106 + 103 Cache      | Variant annotation |
+| Ensembl VEP     | 115      | Variant annotation |
 | vcf2maf.pl      | 1.6.19   | VCF to MAF conversion |
 | OncoKB          | 3.0.0    | Clinical annotation |
-| bcftools  | 1.10.2 | BCF file manipulation |
+| bcftools        | 1.10.2   | BCF file manipulation |
 
 ### Requirements to Run
 - Ensure the proper references and metadata are downloaded
-- Docker, Nextflow, and Java 11.0.1 installed on a conda environment
-  - conda install conda-forge/label/cf201901::openjdk=11.0.1
-  - conda install bioconda::nextflow=25.04.6
-  - conda install conda-forge::docker
+- Docker, Nextflow, and Java installed
+  - eg:
+    ```bash
+    conda install conda-forge/label/cf201901::openjdk=11.0.27
+    conda install bioconda::nextflow=25.04.6
+    conda install conda-forge::docker
+    ```
 - FASTQ files need to be compressed (.gz)
 - Pull all Docker images
   - `$ cd containerization/`
@@ -365,7 +523,7 @@ nf-test test tests/mutation_calling/modules/mutect2/*.nf.test
 - Test data: `nextflow_automation/test-data/`
 
 ### GitHub Actions CI/CD
-Four workflows automatically validate code on pull requests:
+Five workflows automatically validate code on pull requests:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
@@ -373,59 +531,11 @@ Four workflows automatically validate code on pull requests:
 | **Data Processing Tests** | PRs & branch pushes | Tests 7 modules (TRIM, FASTQC, BWA_ALIGN, MARK_DUPES, SET_TAGS, RECAL_BASES, APPLY_BQSR) |
 | **Mutation Calling Tests** | PRs & branch pushes | Tests 5 Mutect2 modules (MUTECT2_CALL, GET_PILEUP_SUMMARIES, CALCULATE_CONTAMINATION, LEARN_READ_ORIENTATION, FILTER_MUTECT_CALLS) |
 | **Make MC Manifest Tests** | PRs & branch pushes | pytest unit + integration tests for `make_mc_manifest.py` |
+| **OncoKB API Check** | Weekly (Mondays) + manual | Validates OncoKB token via curl; alerts on expiry (HTTP 401) |
 
 Tests run in parallel using GitHub Actions matrix strategy for faster CI/CD execution.
 
 ## Outputs
-
-### Primary Outputs
-* The pipeline generates results organized similarly to the following directory structure:
-```
-base_dir/
-├── preprocessing/
-│   └── analysis_ready_bams/
-│   │   └── {sample_id}.BQSR.bam
-│   └── recal-tables 
-│   │   └── ${sample_id}.recal_data.table
-├── QC/
-│   └── multiqc_data/
-│   └── multiqc_report_{date}.html
-├── mutation_calls/
-│   ├── varscan2/
-│   │   ├── oncokb_annotation/
-│   │   │   └── {sample_id}.oncokb.maf
-│   │   └── vep_annotation/
-│   │   │   └── {sample_id}.vep.vcf
-│   │   └── raw-vcfs/
-│   │       └── {sample_id}.vcf
-
-│   ├── mutect2/
-│   │   ├── oncokb_annotation/
-│   │   │   └── {sample_id}.oncokb.maf
-│   │   └── vep_annotation/
-│   │   │   └── {sample_id}.vep.vcf
-│   │   └── raw-vcfs/
-│   │       └── {sample_id}.vcf
-│   └── muse/
-│   │   ├── oncokb_annotation/
-│   │   │   └── {sample_id}.oncokb.maf
-│   │   └── vep_annotation/
-│   │   │   └── {sample_id}.vep.vcf
-│   │   └── raw-vcfs/
-│   │       └── {sample_id}.vcf
-│   └── consensus/
-│   │   ├── oncokb_annotation/
-│   │   │   └── {sample_id}.oncokb.maf
-│   │   └── vep_annotation/
-│   │   │   └── {sample_id}.vep.vcf
-│   │   └── raw-vcfs/
-│   │       └── {sample_id}.vcf
-
-└── cnv_calling/
-    └── segmentation/
-        └── {sample_id}.seg
-```
-
 **Key Output Files:**
 
 | File Type | Location | Description |
