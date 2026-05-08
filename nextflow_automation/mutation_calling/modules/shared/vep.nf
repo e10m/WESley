@@ -35,7 +35,7 @@ process VEP {
     OUTPUT_NAME=\${BASE_NAME/pass/vep}
 
     # annotate via VEP
-    vep \
+    /opt/vep/src/ensembl-vep/vep \
     --vcf \
     --input_file $selected_vcf \
     --output_file "\${OUTPUT_NAME%.gz}" \
