@@ -24,7 +24,7 @@ process ONCOKB {
 
     script:
     def get_key = params.use_secrets_manager
-        ? "ONCOKB_API_KEY=\$(aws secretsmanager get-secret-value --secret-id ${params.oncokb_secret_name} --region ${params.aws_region} --query SecretString --output text)"
+        ? "ONCOKB_API_KEY=\$(aws secretsmanager get-secret-value --secret-id ${params.oncokb_secret_name} --region us-west-2 --query SecretString --output text)"
         : "ONCOKB_API_KEY=${params.oncokb_api_key}"
 
     """
