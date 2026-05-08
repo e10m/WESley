@@ -17,7 +17,7 @@ include { REHEADER } from './modules/shared/reheader.nf'
 include { CREATE_MAF } from './modules/shared/create_maf.nf'
 include { KEEP_NONSYNONYMOUS } from './modules/shared/keep_nonsynonymous.nf'
 include { RENAME_HG38 } from './modules/shared/rename_hg38.nf'
-include { ONCOKB } from './modules/shared/oncokb.nf'
+include { ONCOKB; ONCOKB_OMICS } from './modules/shared/oncokb.nf'
 include { MUTECT2_PON } from './modules/mutect2_pon/mutect2_pon.nf'
 include { GENOMICS_DB_IMPORT } from './modules/mutect2_pon/genomics_db_import.nf'
 include { CREATE_PON } from './modules/mutect2_pon/create_pon.nf'
@@ -211,8 +211,11 @@ workflow {
     // rename and reformat the files
     renamed_files = RENAME_HG38(nonsynonymous_mutations)
 
-    // oncokb annotation for clinical relevance
-    ONCOKB(renamed_files)
+    // oncokb annotation for clinical relevance — dispatch to the AWS Secrets
+    // Manager variant on HealthOmics, otherwise use the Nextflow secret variant
+    is_omics
+        ? ONCOKB_OMICS(renamed_files)
+        : ONCOKB(renamed_files)
 }
 
 workflow CREATE_M2_PON {
