@@ -27,6 +27,7 @@ process EXTRACT_FINGERPRINT {
     java -jar /usr/picard/picard.jar ExtractFingerprint \\
         -I ${bam} \\
         -H /references/${params.haplotype_map} \\
-        -O ${sample_id}.fingerprint.vcf
+        -O ${sample_id}.fingerprint.vcf \\
+        -R /references/Homo_sapiens_assembly38.fasta
     """
 }
