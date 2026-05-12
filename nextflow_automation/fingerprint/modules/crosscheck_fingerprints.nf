@@ -13,7 +13,7 @@ process CROSSCHECK_FINGERPRINTS {
     label 'shortTime'
     stageInMode 'symlink'
 
-    publishDir "${params.output_dir}", mode: 'copy'
+    publishDir "${params.output_dir}/fingerprint/comparison-metrics", mode: 'copy'
 
     input:
     path(vcfs)

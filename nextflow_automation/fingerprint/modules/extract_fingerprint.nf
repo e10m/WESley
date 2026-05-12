@@ -14,13 +14,13 @@ process EXTRACT_FINGERPRINT {
     label 'shortTime'
     stageInMode 'copy'    // copy BAMs from bam_dir into work dir
 
-    publishDir "${params.output_dir}/fingerprints", mode: 'copy'
+    publishDir "${params.output_dir}/fingerprint/vcfs", mode: 'copy'
 
     input:
     tuple val(sample_id), path(bam), path(bai)
 
     output:
-    tuple val(sample_id), path("${sample_id}.fingerprint.vcf"), emit: vcf
+    path("${sample_id}.fingerprint.vcf"), emit: vcf
 
     script:
     """
