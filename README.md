@@ -15,6 +15,7 @@
   - [CNV Calling](#how-to-run-cnvkitnfcnv_calling)
   - [Create CNVKit Normal](#how-to-run-cnvkitnfcreate_norm)
   - [Consensus Calling](#how-to-run-consensus-calling)
+  - [Fingerprinting](#how-to-run-fingerprinting)
 - [AWS HealthOmics](#aws-healthomics)
 - [Docker & Containerization](#docker--containerization)
 - [Requirements](#requirements)
@@ -37,6 +38,9 @@
 
 ### Consensus Calling
 ![Consensus Calling](./diagrams/consensus-calling.png)
+
+### Fingerprinting
+![Fingerprint](./diagrams/fingerprint.png)
 
 ## How To Run (Data Processing)
 
@@ -235,6 +239,62 @@ run "cnvkit.nf" \
 | --ref_genome     | Reference genome used (Default: Homo_sapiens_assembly38.fasta) |
 | --help           | Display the help message |
 
+## How To Run (Fingerprinting)
+
+The fingerprinting workflow uses [Picard](https://broadinstitute.github.io/picard/) to verify sample identity across BAMs. It provides two independent entry points — run `EXTRACT` first to generate per-sample fingerprint VCFs, then `CROSSCHECK` to compare them all-vs-all.
+
+### EXTRACT — BAMs → per-sample fingerprint VCFs
+
+Runs Picard `ExtractFingerprint` on each BAM and publishes one VCF per sample. BAMs must follow the naming convention `<sample_id>.BQSR*.bam`.
+
+```bash
+nextflow -C "/path/to/config" \
+  run fingerprint.nf \
+  -entry EXTRACT \
+  -with-docker -with-trace \
+  --bam_dir "/path/to/bams" \
+  --output_dir "/path/to/results" \
+  --ref_dir "/path/to/references" \
+  --haplotype_map "hg38_chr1-22XY.map"
+```
+
+**Parameters:**
+
+| Flag               | Required | Description |
+|--------------------|----------|-------------|
+| `--bam_dir`        | Yes      | Directory containing BQSR BAM files (searched recursively) |
+| `--output_dir`     | Yes      | Output directory; VCFs are written to `{output_dir}/fingerprint/vcfs/` |
+| `--ref_dir`        | Yes      | Directory containing reference genomes and the haplotype map |
+| `--haplotype_map`  | Yes      | Haplotype map file name inside `ref_dir` (e.g. `hg38_chr1-22XY.map`) |
+| `--cpus`           | No       | Number of CPUs (default: 1) |
+
+### CROSSCHECK — fingerprint VCFs → all-vs-all identity metrics
+
+Runs Picard `CrosscheckFingerprints` across all VCFs in a directory (searched recursively). Use the VCFs produced by `EXTRACT`, or point to any pre-existing fingerprint VCFs.
+
+```bash
+nextflow -C "/path/to/config" \
+  run fingerprint.nf \
+  -entry CROSSCHECK \
+  -with-docker -with-trace \
+  --vcf_dir "/path/to/results/fingerprint/vcfs" \
+  --output_dir "/path/to/results" \
+  --ref_dir "/path/to/references" \
+  --haplotype_map "hg38_chr1-22XY.map"
+```
+
+**Parameters:**
+
+| Flag               | Required | Description |
+|--------------------|----------|-------------|
+| `--vcf_dir`        | Yes      | Directory containing fingerprint VCFs (searched recursively) |
+| `--output_dir`     | Yes      | Output directory; metrics are written to `{output_dir}/fingerprint/comparison-metrics/` |
+| `--ref_dir`        | Yes      | Directory containing reference genomes and the haplotype map |
+| `--haplotype_map`  | Yes      | Haplotype map file name inside `ref_dir` (e.g. `hg38_chr1-22XY.map`) |
+| `--cpus`           | No       | Number of CPUs (default: 1) |
+
+**Output:** `crosscheck.metrics` — a tab-separated Picard metrics file with LOD scores for every pair of samples. Pairs with `LOD_SCORE < -5` (the pipeline threshold) are flagged as unexpected mismatches.
+
 ## How To Run (Consensus Calling)
 ```bash
 # Set OncoKB API token via Nextflow secrets (only needs to be done once;
@@ -404,6 +464,7 @@ docker compose pull
 | Mutation Calling | `broadinstitute/gatk:4.2.0.0`, `quay.io/biocontainers/muse`, `e10m/varscan2`, `e10m/vep`, `e10m/oncokb` |
 | CNV Calling | `quay.io/biocontainers/cnvkit:0.9.10` |
 | Consensus Calling | `e10m/vep`, `e10m/oncokb`, `e10m/vcf2maf`, `staphb/bcftools` |
+| Fingerprinting | `broadinstitute/picard:3.4.0` |
 
 ### Custom Images
 Custom Dockerfiles are located in `containerization/dockerfiles/` for tools requiring specific configurations:
@@ -477,6 +538,11 @@ containerOptions = "-v ${params.ref_dir}:/references"
 | OncoKB          | 3.0.0    | Clinical annotation |
 | bcftools        | 1.10.2   | BCF file manipulation |
 
+#### Fingerprinting
+| Software        | Version  | Purpose |
+|-----------------|----------|---------|
+| Picard          | 3.4.0    | Sample identity verification (ExtractFingerprint / CrosscheckFingerprints) |
+
 ### Requirements to Run
 - Ensure the proper references and metadata are downloaded
 - Docker, Nextflow, and Java installed
@@ -544,6 +610,8 @@ Tests run in parallel using GitHub Actions matrix strategy for faster CI/CD exec
 | **VEP-annotated VCFs** | `mutation_calls/{caller}/vep_annotation/` | Variant calls annotated with Variant Effect Predictor |
 | **OncoKB-annotated MAFs** | `mutation_calls/{caller}/oncokb_annotation/` | Mutation calls in MAF format with OncoKB clinical annotations |
 | **Segmentation files** | `cnv_calling/segmentation/` | Copy number variant segments in SEG format |
+| **Fingerprint VCFs** | `fingerprint/vcfs/` | Per-sample fingerprint VCFs produced by `EXTRACT` |
+| **Crosscheck metrics** | `fingerprint/comparison-metrics/crosscheck.metrics` | All-vs-all LOD score matrix from `CROSSCHECK` |
 
 ### Logs
 All execution logs and resource usage reports:

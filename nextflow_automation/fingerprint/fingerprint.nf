@@ -5,54 +5,44 @@ include { EXTRACT_FINGERPRINT } from './modules/extract_fingerprint.nf'
 include { CROSSCHECK_FINGERPRINTS } from './modules/crosscheck_fingerprints.nf'
 
 
-// main workflow
-workflow FINGERPRINT {
-    // Show help message if requested
-    if (params.help) {
-        help = """Usage:
+// ─── shared helpers ─────────────────────────────────────────────────────────
 
-        The typical command for running the pipeline is as follows:
+def help_message() {
+    def help = """Usage:
 
-        nextflow -C <CONFIG_FILE> run fingerprint.nf --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --haplotype_map <FILE> [OPTIONS]
+    Two entry workflows are available — select one via -entry:
 
-        Required arguments:
-        --bam_dir                     Path to the directory containing input BAM files
-        --output_dir                  Path to the output directory to publish results
-        --ref_dir                     Path to the reference directory
-        --haplotype_map               File name of the haplotype map inside ref_dir (eg: hg38_chr1-22XY.map)
+      EXTRACT     Channel BAMs and run Picard ExtractFingerprint to produce per-sample VCFs.
+      CROSSCHECK  Channel existing fingerprint VCFs and run Picard CrosscheckFingerprints.
 
-        Optional arguments:
-        --cpus                        Number of CPUs to use for processing (default: 4)
-        --help                        Show this help message and exit
-        """
+    EXTRACT usage:
+      nextflow -C <CONFIG_FILE> run fingerprint.nf -entry EXTRACT \\
+          --bam_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --haplotype_map <FILE>
 
-        // Print the help and exit
-        println(help)
-        exit(0)
-    }
+      Required arguments:
+        --bam_dir         Path to the directory containing input BAM files
+        --output_dir      Path to the output directory to publish results
+        --ref_dir         Path to the reference directory
+        --haplotype_map   File name of the haplotype map inside ref_dir (eg: hg38_chr1-22XY.map)
 
-    // Parameter validation
-    if (!params.bam_dir) {
-        error "ERROR: --bam_dir parameter is required"
-        exit 1
-    }
+    CROSSCHECK usage:
+      nextflow -C <CONFIG_FILE> run fingerprint.nf -entry CROSSCHECK \\
+          --vcf_dir <PATH> --output_dir <PATH> --ref_dir <PATH> --haplotype_map <FILE>
 
-    if (!params.output_dir) {
-        error "ERROR: --output_dir parameter is required"
-        exit 1
-    }
+      Required arguments:
+        --vcf_dir         Path to a directory containing fingerprint VCFs (searched recursively)
+        --output_dir      Path to the output directory to publish results
+        --ref_dir         Path to the reference directory
+        --haplotype_map   File name of the haplotype map inside ref_dir (eg: hg38_chr1-22XY.map)
 
-    if (!params.ref_dir) {
-        error "ERROR: --ref_dir parameter is required"
-        exit 1
-    }
+    Optional arguments (both workflows):
+      --cpus              Number of CPUs to use for processing (default: 1)
+      --help              Show this help message and exit
+    """
+    println(help)
+}
 
-    if (!params.haplotype_map) {
-        error "ERROR: --haplotype_map parameter is required"
-        exit 1
-    }
-
-    // workflow logging
+def log_banner() {
     log.info """\
  __     __     ______     ______     __         ______     __  __
 /\\ \\  _ \\ \\   /\\  ___\\   /\\  ___\\   /\\ \\       /\\  ___\\   /\\ \\_\\ \\
@@ -67,19 +57,45 @@ workflow FINGERPRINT {
     Container(s)        : ${workflow.containerEngine}:${workflow.container ?: 'None'}
     Nextflow Version    : ${workflow.manifest.nextflowVersion}
     """.stripIndent()
+}
 
-    ////////////////////////////
-    // Start of main workflow //
-    ////////////////////////////
 
-    // channel in all BAMs, parse sample_id as everything before the first dot
+// ─── EXTRACT: BAMs → per-sample fingerprint VCFs ────────────────────────────
+
+workflow EXTRACT {
+    if (params.help) {
+        help_message()
+        exit(0)
+    }
+
+    // Parameter validation
+    if (!params.bam_dir) {
+        error "ERROR: --bam_dir parameter is required"
+        exit 1
+    }
+    if (!params.output_dir) {
+        error "ERROR: --output_dir parameter is required"
+        exit 1
+    }
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+    if (!params.haplotype_map) {
+        error "ERROR: --haplotype_map parameter is required"
+        exit 1
+    }
+
+    log_banner()
+
+    // channel in all BAMs, parse sample_id as everything before .BQSR
     Channel
         .fromPath([
             "${params.bam_dir}/*.bam",
             "${params.bam_dir}/**/*.bam"
         ])
         .map { bam ->
-            def sample_id = (bam.name =~ /^(.+?)\./)[0][1]
+            def sample_id = (bam.name =~ /^(\S+)\.BQSR/)[0][1]  // match everything before the first .BQSR
             def bai = file("${bam}.bai").exists() ?
                       file("${bam}.bai") :
                       file("${bam.toString().replace('.bam', '.bai')}").exists() ?
@@ -91,7 +107,46 @@ workflow FINGERPRINT {
 
     // extract per-sample fingerprint VCFs
     EXTRACT_FINGERPRINT(all_bams)
+}
+
+
+// ─── CROSSCHECK: fingerprint VCFs → all-vs-all metrics ──────────────────────
+
+workflow CROSSCHECK {
+    if (params.help) {
+        help_message()
+        exit(0)
+    }
+
+    // Parameter validation
+    if (!params.vcf_dir) {
+        error "ERROR: --vcf_dir parameter is required"
+        exit 1
+    }
+    if (!params.output_dir) {
+        error "ERROR: --output_dir parameter is required"
+        exit 1
+    }
+    if (!params.ref_dir) {
+        error "ERROR: --ref_dir parameter is required"
+        exit 1
+    }
+    if (!params.haplotype_map) {
+        error "ERROR: --haplotype_map parameter is required"
+        exit 1
+    }
+
+    log_banner()
+
+    // channel in all fingerprint VCFs (top-level + recursive) and collect into a list
+    Channel
+        .fromPath([
+            "${params.vcf_dir}/*.vcf",
+            "${params.vcf_dir}/**/*.vcf"
+        ])
+        .collect()
+        .set { all_vcfs }
 
     // run all-vs-all crosscheck across all fingerprint VCFs
-    CROSSCHECK_FINGERPRINTS(EXTRACT_FINGERPRINT.out.vcf.collect())
+    CROSSCHECK_FINGERPRINTS(all_vcfs)
 }
