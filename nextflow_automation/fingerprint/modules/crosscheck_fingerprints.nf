@@ -28,7 +28,8 @@ process CROSSCHECK_FINGERPRINTS {
         ${inputs} \\
         -H /references/${params.haplotype_map} \\
         -O crosscheck.metrics \\
-        -R /references/Homo_sapiens_assembly38.fasta \\
-        --CROSSCHECK_BY SAMPLE
+        LOD_THRESHOLD=-5 \\
+        CROSSCHECK_BY=FILE \\
+        -R /references/Homo_sapiens_assembly38.fasta
     """
 }
