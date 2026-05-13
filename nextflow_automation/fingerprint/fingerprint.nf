@@ -79,7 +79,7 @@ workflow FINGERPRINT {
             "${params.bam_dir}/**/*.bam"
         ])
         .map { bam ->
-            def sample_id = (bam.name =~ /^(.+?)\./)[0][1]
+            def sample_id = (bam.name =~ /^(\S+)\.BQSR/)[0][1]  // match everything before the first .BQSR
             def bai = file("${bam}.bai").exists() ?
                       file("${bam}.bai") :
                       file("${bam.toString().replace('.bam', '.bai')}").exists() ?
