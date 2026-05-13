@@ -39,6 +39,9 @@
 ### Consensus Calling
 ![Consensus Calling](./diagrams/consensus-calling.png)
 
+### Fingerprinting
+![Fingerprint](./diagrams/fingerprint.png)
+
 ## How To Run (Data Processing)
 
 ### Run Data Processing Workflow:
