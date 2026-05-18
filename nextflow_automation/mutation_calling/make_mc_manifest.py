@@ -66,6 +66,7 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
     cell_line = metadata_row.get_column("Line").item()
     matching_normals = normals_df.filter(pl.col("Line") == cell_line)
 
+    # Case: No normals sequenced for that cell line
     if matching_normals.is_empty():
         return {
             "Tumor_ID": tumor_id,
@@ -73,16 +74,15 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
             "Normal_BAM": "NO_FILE",
             "Normal_BAI": "NO_FILE"
         }
+        
+    # Case: 1 normal sequenced for that cell line
     elif matching_normals.height == 1:
         # Get normal IDs
         normal_id = matching_normals.get_column("Short ID").item()
-        normal_seq_id = matching_normals.get_column("WES ID").item()
 
         # Find BAM and BAI files
-        bam_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bam") or
-                    glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bam"))
-        bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
-                    glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai"))
+        bam_files = glob.glob(f"{bam_dir}/normals/{normal_id}*.bam")
+        bai_files = glob.glob(f"{bam_dir}/normals/{normal_id}*.bai")
 
         return {
             "Tumor_ID": tumor_id,
@@ -90,20 +90,19 @@ def find_normal_info(sample_id: str, metadata_subset: pl.DataFrame, normals_df: 
             "Normal_BAM": bam_files[0] if bam_files else "NO_FILE",
             "Normal_BAI": bai_files[0] if bai_files else "NO_FILE"
         }
+
+    # Case: Multiple normals sequenced
     else:
         normal_bam = None
         normal_id = None
-        normal_seq_id = None
         for row in matching_normals.iter_rows(named=True):
             matches = (glob.glob(f"{bam_dir}/normals/*{row['Line']}*.bam"))
             if matches:
                 normal_bam = matches[0]
                 normal_id = row["Short ID"]
-                normal_seq_id = row["WES ID"]
                 break
 
-        bai_files = (glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") or
-                     glob.glob(f"{bam_dir}/normals/{normal_seq_id}*.bai")) if normal_id else []
+        bai_files = glob.glob(f"{bam_dir}/normals/{normal_id}*.bai") if normal_id else []
 
         return {
             "Tumor_ID": tumor_id,
