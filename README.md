@@ -46,7 +46,7 @@
 
 ### Run Data Processing Workflow:
 ```bash
-nextflow run data_processing.nf -with-docker -with-trace \
+nextflow -C /path/to/nextflow.config run data_processing.nf -entry DATA_PROCESSING -with-docker -with-trace \
 --fastq_dir /path/to/batch-18/raw_fastqs \
 --output_dir /path/to/batch-18/results \
 --ref_dir /references \
@@ -59,6 +59,8 @@ nextflow run data_processing.nf -with-docker -with-trace \
 
 | Flag            | Description |
 |-----------------|-------------|
+| `-C`            | Nextflow config file |
+| `-entry`        | Workflow-specific name |
 | `--with-docker` | Enables Docker container usage |
 | `-with-trace`   | Generates trace logs for resource usage and execution profiling |
 | `--fastq_dir`   | Directory containing raw FASTQ files |
